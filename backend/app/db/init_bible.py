@@ -4,7 +4,7 @@ import os
 import json
 
 from app import crud
-from app.models.bible import Language, Book, Chapter, Verse, OLD_TESTAMENT, NEW_TESTAMENT
+from app.models.bible import Bible, Language, Book, Chapter, Verse, OLD_TESTAMENT, NEW_TESTAMENT
 from app.db.session import SessionLocal
 
 logging.basicConfig(level=logging.INFO)
@@ -24,8 +24,8 @@ class InitDb():
         self.init_mlg_bible()
 
     def init_languages(self):
-        langs = [Language(name=name)
-                 for name in ["English", "Français", "Malagasy"]]
+        langs = [Language(name=lg[1], code=lg[0])
+                 for lg in [("en", "English"), ("fr", "Français"), ("mg", "Malagasy")]]
         if not crud.language.get_multi(self.db):
             crud.language.create_multi(self.db, langs)
             logger.info("%s languages inserted", len(langs))
@@ -35,16 +35,24 @@ class InitDb():
     def init_mlg_bible(self):
         """
         Import malagasy bible version
-        """
-        # load language to be used
-        mlg = crud.language.get_by_name(self.db, "Malagasy")
-        if not mlg:
-            raise ValueError("Malagasy language not found")
-
+        """          
         baiboly_src = os.path.join(ROOT, 'data', 'bible', 'baiboly.json')
 
         with open(baiboly_src, 'r+', encoding='UTF-8') as f:
             datas = json.load(f)
+                 
+            src_lang = datas["lang"]
+            lang = crud.language.get_by_code(self.db, src_lang)
+            if not lang:
+                raise ValueError(f"Source language {src_lang} not found in db")
+            
+            bible = Bible(
+                src = datas["created"]["name"],
+                version = datas["version"],
+                lang = lang             
+            )
+            crud.bible.create(self.db, bible)
+            
             data = datas['body']
             order = 0
 
@@ -55,7 +63,7 @@ class InitDb():
                     short_name=d['id'],
                     rank=order,
                     category=OLD_TESTAMENT if order < 40 else NEW_TESTAMENT,
-                    lang=mlg
+                    bible=bible
                 )
                 crud.book.create(self.db, book)               
 

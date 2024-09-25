@@ -9,7 +9,8 @@ from app.db.base_class import Base
 
 class Language(Base):
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(50), unique=True)    
+    name = Column(String(50), unique=True) 
+    code = Column(String(5))   
     
     def __str__(self):
         return self.name
@@ -22,14 +23,22 @@ BOOK_CATEGORIES = (
         (NEW_TESTAMENT, 'New Testament')
 )
 
+class Bible(Base):
+    id = Column(Integer, primary_key=True, index=True)
+    version = Column(String(128))
+    year = Column(Integer)
+    src = Column(String(128))
+    lang_id = Column(Integer, ForeignKey('language.id'))
+    lang = relationship('Language')
+
 class Book(Base):    
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(120), unique=True)
     short_name = Column(String(10))
     rank = Column(Integer, nullable=False)
     category =  ChoiceType(BOOK_CATEGORIES, impl=Integer)
-    lang_id = Column(Integer, ForeignKey('language.id'))
-    lang = relationship('Language')
+    bible_id = Column(Integer, ForeignKey('bible.id'))
+    bible = relationship('Bible')
     # chapters = Mapped[List["Chapter"]] = relationship(back_populates="book")
     chapters = relationship(
         "Chapter",
