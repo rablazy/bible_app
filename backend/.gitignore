@@ -1,0 +1,12 @@
+__pycache__
+*.pyc
+.pytest_cache
+htmlcov
+dist
+site
+.coverage*
+coverage.xml
+choirapp.db
+
+# macOS
+.DS_Store

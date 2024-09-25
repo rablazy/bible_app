@@ -1,0 +1,1 @@
+Project to learn FastAPI and SQLAlchemy
