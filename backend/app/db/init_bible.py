@@ -4,7 +4,7 @@ import os
 import json
 
 from app import crud
-from app.models.bible import Bible, Language, Book, Chapter, Verse, OLD_TESTAMENT, NEW_TESTAMENT
+from app.models.bible import Bible, Language, Book, Chapter, Verse, BookTypeEnum
 from app.db.session import SessionLocal
 from sqlalchemy import func, select, and_
 
@@ -68,7 +68,7 @@ class InitDb():
                         name=d['title'],
                         short_name=d['id'],
                         rank=order,
-                        category=OLD_TESTAMENT if order < 40 else NEW_TESTAMENT,
+                        category=BookTypeEnum.OLD if order < 40 else BookTypeEnum.NEW,
                         bible=bible
                     )
                     crud.book.create(self.db, book)               
@@ -116,11 +116,39 @@ class InitDb():
             self.check_data()
             
     def check_data(self):
-        # check chapters
+        logger.info("Checking bible data right now ...")
+        
+        # assert number of books inserted
+        assert(self.db.query(Book).count() == 66)        
+        assert(self.db.query(Book).filter(Book.category == BookTypeEnum.OLD).count() == 39)
+        assert(self.db.query(Book).filter(Book.category == BookTypeEnum.NEW).count() == 27)
+        
+        # assert books placed in right category        
+        assert(self.db.query(Book).filter(Book.rank==38).first().category == BookTypeEnum.OLD ) # zakaria
+        assert(self.db.query(Book).filter(Book.rank==41).first().category == BookTypeEnum.NEW ) # marka
+        
         # check first book has 50 chapter
         assert(self.db.query(Chapter).join(Chapter.book).filter(Book.rank == 1).count() == 50)
         # check last book has 22 chapter
-        assert(self.db.query(Chapter).join(Chapter.book).filter(Book.rank == 66).count() == 22)        
+        assert(self.db.query(Chapter).join(Chapter.book).filter(Book.rank == 66).count() == 22) 
+        # assert Luke 8 has 25 verses
+        assert(self.db.query(Verse)
+               .join(Chapter)
+               .join(Chapter.book)
+               .filter(Book.rank == 42, Chapter.rank==8).count() == 56
+        )  
+        # asset some verses have substitle       
+        verse = self.db.query(Verse).join(Chapter).join(Chapter.book).filter(
+            Book.rank == 2, Chapter.rank == 6, Verse.rank == 2).first()
+        assert(verse.subtitle is not None)           
+             
+        verse = self.db.query(Verse).join(Chapter).join(Chapter.book).filter(
+            Book.rank == 44, Chapter.rank == 25, Verse.rank == 1).first()
+        assert(verse.subtitle is not None)       
+        
+        logger.info("Checking bible data ok !")
+        
+             
 
 
 def main() -> None:

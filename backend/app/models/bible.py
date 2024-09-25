@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum
 from sqlalchemy.orm import relationship, Mapped
 from sqlalchemy_utils import ChoiceType
 
@@ -16,12 +16,10 @@ class Language(Base):
         return self.name
     
 
-OLD_TESTAMENT = 1
-NEW_TESTAMENT = 2
-BOOK_CATEGORIES = (
-        (OLD_TESTAMENT, 'Old Testament'),
-        (NEW_TESTAMENT, 'New Testament')
-)
+import enum
+class BookTypeEnum(enum.Enum):
+    OLD = 'Old'
+    NEW = 'New'
 
 class Bible(Base):
     id = Column(Integer, primary_key=True, index=True)
@@ -36,7 +34,7 @@ class Book(Base):
     name = Column(String(120), unique=True)
     short_name = Column(String(10))
     rank = Column(Integer, nullable=False)
-    category =  ChoiceType(BOOK_CATEGORIES, impl=Integer)
+    category =  Column(Enum(BookTypeEnum, nullable=False))
     bible_id = Column(Integer, ForeignKey('bible.id'))
     bible = relationship('Bible')
     # chapters = Mapped[List["Chapter"]] = relationship(back_populates="book")
