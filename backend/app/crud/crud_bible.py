@@ -8,18 +8,23 @@ class CRUDLanguage(CRUD[Language]):
     def get_by_code(self, db: Session, code: str):
         return db.query(self.model).filter(self.model.code==code).first()
 
-class CRUDBook(CRUD[Book]):
-    pass        
 
-class CRUDChapter(CRUD[Chapter]):
-    pass
+class CRUDBible(CRUD[Bible]): ...
+    # def get_by_version_and_lang(self, db: Session, version: str, lang:str):
+    #     return db.query(Book).filter(
+    #         Book.version.ilike(version),
+    #         Book.lang.ilike(lang)
+    #         ).first()   
 
-class CRUDVerse(CRUD[Verse]):
-    pass
+class CRUDBook(CRUD[Book]):...  
 
+class CRUDChapter(CRUD[Chapter]): ...
+
+class CRUDVerse(CRUD[Verse]): ...
+    
 
 language = CRUDLanguage(Language)
 book = CRUDBook(Book)
-bible = CRUDBook(Bible)
+bible = CRUDBible(Bible)
 chapter = CRUDChapter(Chapter)
 verse = CRUDVerse(Verse)

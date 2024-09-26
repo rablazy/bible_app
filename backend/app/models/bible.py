@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Enum
-from sqlalchemy.orm import relationship, Mapped
+from sqlalchemy.orm import relationship, column_property, Mapped
+from sqlalchemy import select, func
 from sqlalchemy_utils import ChoiceType
 
 from typing import List
@@ -28,6 +29,25 @@ class Bible(Base):
     src = Column(String(128))
     lang_id = Column(Integer, ForeignKey('language.id'))
     lang = relationship('Language')
+    
+    
+class Chapter(Base):
+    # __tablename__ = "chapter"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    rank = Column(Integer, nullable=False)
+    book_id = Column(Integer, ForeignKey('book.id'))
+    book = relationship('Book', back_populates='chapters')
+    verses = relationship(
+        "Verse",
+        cascade="all,delete-orphan",
+        back_populates="chapter",
+        uselist=True,
+    )     
+    
+    def __str__(self):
+        return f"{self.book.short_name.capitalize()}. {self.rank}"
+        
 
 class Book(Base):    
     id = Column(Integer, primary_key=True, index=True)
@@ -43,26 +63,17 @@ class Book(Base):
         cascade="all,delete-orphan",
         back_populates="book",
         uselist=True,
+    )       
+    chapter_count = column_property(
+        select(func.count(Chapter.book_id)).filter(Chapter.book_id == id).scalar_subquery(),
+        deferred=True,
     )
     
     def __str__(self):
         return self.name
 
 
-class Chapter(Base):
-    id = Column(Integer, primary_key=True, index=True)
-    rank = Column(Integer, nullable=False)
-    book_id = Column(Integer, ForeignKey('book.id'))
-    book = relationship('Book', back_populates='chapters')
-    verses = relationship(
-        "Verse",
-        cascade="all,delete-orphan",
-        back_populates="chapter",
-        uselist=True,
-    )     
-    
-    def __str__(self):
-        return f"{self.book.short_name.capitalize()}. {self.rank}"
+
 
 
 class Verse(Base):

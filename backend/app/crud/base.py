@@ -26,12 +26,16 @@ class CRUD(Generic[ModelType]):
     def get_by_name(self, db: Session, name: str):
         return db.query(self.model).filter(self.model.name==name).first()
     
-    def get_multi(
-        self, db: Session, *, skip: int = 0, limit: int = 5000
+    def get_multi(        
+        self, db: Session, *, skip: int = 0, limit: int = 5000, filters:Optional[List] = []
     ) -> List[ModelType]:
-        return (
-            db.query(self.model).order_by(self.model.id).offset(skip).limit(limit).all()
-        )
+        q = db.query(self.model)
+        if filters:            
+            q = q.filter(*filters)        
+        print(q)
+        return q.order_by(self.model.id).offset(skip).limit(limit).all()
+        
+        
     
     def create(self, db: Session, obj_in: ModelType) -> ModelType:        
         db.add(obj_in)
