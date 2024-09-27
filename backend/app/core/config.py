@@ -1,6 +1,6 @@
 import pathlib
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict, BaseSettings
 from pydantic import AnyHttpUrl, EmailStr, field_validator
 from typing import List, Optional, Union
 
@@ -41,9 +41,7 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URI: Optional[str] = "sqlite:///choirapp.db"
     FIRST_SUPERUSER: EmailStr = "admin@choir.mg"
     FIRST_SUPERUSER_PW: str = "adminch"
-
-    class Config:
-        case_sensitive = True
+    model_config = SettingsConfigDict(case_sensitive=True)
 
 
 settings = Settings()

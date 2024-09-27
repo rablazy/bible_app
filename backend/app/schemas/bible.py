@@ -12,9 +12,7 @@ class ListItems(BaseModel, Generic[DataT]):
 class LanguageItem(BaseModel):
     name: str
     code: str
-    
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class BibleItem(BaseModel):    
@@ -23,7 +21,7 @@ class BibleItem(BaseModel):
     
     id: int
     version: str
-    year: date | None
+    year: date | None = None
     src: str
     lang: LanguageItem           
    
