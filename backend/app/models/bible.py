@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Enum
-from sqlalchemy.orm import relationship, column_property, Mapped
+from sqlalchemy.orm import relationship, column_property, Mapped, mapped_column
 from sqlalchemy import select, func
 from sqlalchemy_utils import ChoiceType
 
@@ -38,12 +38,7 @@ class Chapter(Base):
     rank = Column(Integer, nullable=False)
     book_id = Column(Integer, ForeignKey('book.id'))
     book = relationship('Book', back_populates='chapters')
-    verses = relationship(
-        "Verse",
-        cascade="all,delete-orphan",
-        back_populates="chapter",
-        uselist=True,
-    )     
+    verses : Mapped[List["Verse"]] = relationship(back_populates="chapter")           
     
     def __str__(self):
         return f"{self.book.short_name.capitalize()}. {self.rank}"
@@ -57,13 +52,7 @@ class Book(Base):
     category =  Column(Enum(BookTypeEnum, nullable=False))
     bible_id = Column(Integer, ForeignKey('bible.id'))
     bible = relationship('Bible')
-    # chapters = Mapped[List["Chapter"]] = relationship(back_populates="book")
-    chapters = relationship(
-        "Chapter",
-        cascade="all,delete-orphan",
-        back_populates="book",
-        uselist=True,
-    )       
+    chapters : Mapped[List["Chapter"]] = relationship(back_populates="book")     
     chapter_count = column_property(
         select(func.count(Chapter.book_id)).filter(Chapter.book_id == id).scalar_subquery(),
         deferred=True,
@@ -71,9 +60,6 @@ class Book(Base):
     
     def __str__(self):
         return self.name
-
-
-
 
 
 class Verse(Base):

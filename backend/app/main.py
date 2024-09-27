@@ -31,18 +31,13 @@ if settings.BACKEND_CORS_ORIGINS:
 
 @root_router.get("/", status_code=200)
 def root(
-    request: Request,
-    #db: Session = Depends(deps.get_db),
+    request: Request,    
 ) -> dict:
     """
     Root GET
     """
     return { "message" : "Hello Saimon !"}
-    # recipes = crud.recipe.get_multi(db=db, limit=10)
-    # return TEMPLATES.TemplateResponse(
-    #     "index.html",
-    #     {"request": request, "recipes": recipes},
-    # )
+    
 
 
 @app.middleware("http")
