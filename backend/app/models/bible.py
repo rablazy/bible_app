@@ -69,5 +69,9 @@ class Verse(Base):
     chapter_id = Column(Integer, ForeignKey('chapter.id'))
     chapter = relationship('Chapter', back_populates='verses')
     
+    @property
+    def chapter_rank(self):
+        return self.chapter.rank
+    
     def __str__(self):
         return f"{self.chapter}.{self.rank}"

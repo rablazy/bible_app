@@ -1,7 +1,11 @@
 import pytest
+import logging
 
 from tests import get_url
 from app.models.bible import BookTypeEnum
+
+
+logger = logging.getLogger(__name__)
 
 pytest.BASE_URL = "bible"
 
@@ -33,7 +37,20 @@ def test_search_books(client):
     assert book.short_name == "ASA"
     assert book.chapter_count == 28
     
-    # data = standard_check(client.get(get_url(f"{bible_id}/books")))
+    
+def test_get_verse(client):
+    data = get_url(client, "verse/66/15/1?chapter_end=17&verse_end=3")
+    
+    first_verse = data.results[0]
+    assert first_verse.chapter_rank == 15
+    assert first_verse.subtitle is not None
+    assert first_verse.rank == 1
+    
+    last_verse = data.results[-1]
+    assert last_verse.chapter_rank == 17
+    assert last_verse.rank == 3
+    assert any(verse.chapter_rank == 16 for verse in data.results)
+    
     
     
     

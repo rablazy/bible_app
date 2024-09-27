@@ -2,7 +2,7 @@ from app.models.bible import Language
 from pydantic import BaseModel, computed_field, ConfigDict, model_validator
 from datetime import date
 
-from typing import Generic, Sequence, ClassVar, TypeVar
+from typing import Generic, Optional, Sequence, List, TypeVar, Union
 
 DataT = TypeVar('DataT')    
 class ListItems(BaseModel, Generic[DataT]):
@@ -27,16 +27,40 @@ class BibleItem(BaseModel):
    
     # class Config:
     #     from_attributes = True         
-                          
+       
 
-class BookItem(BaseModel):
+class BookItemShort(BaseModel):   
+    model_config = ConfigDict(from_attributes=True)
     id : int
     name : str
     short_name : str
     rank : int
     category : str
     bible_id : int
-    chapter_count: int = 0      
+    chapter_count: int = 0                           
+
+
+class ChapterItem(BaseModel):
+    id : int
+    rank : int
+    book_id : int    
+    #verses : List[VerseItem]
+
+class BookItem(BookItemShort):   
+    model_config = ConfigDict(from_attributes=True) 
+    chapters : List[ChapterItem]
+    
+    
+class VerseItem(BaseModel):         
+    id : int
+    subtitle : Optional[Union[str, int, bytes]] = None
+    content : str
+    rank : int
+    chapter_id : int
+    chapter_rank: int
+    
+BookItem.model_rebuild() 
+ChapterItem.model_rebuild() 
         
     
     

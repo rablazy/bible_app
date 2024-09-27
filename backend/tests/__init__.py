@@ -29,15 +29,17 @@ def build_url(uri):
     return f"{pytest.MAIN_URL}/{pytest.BASE_URL}/{uri}"
 
 
-def get_url(client, uri, check_empty=True):
+def get_url(client, uri, check_empty=True, to_dict=True):
     url = build_url(uri)     
     response = client.get(url)
-    return standard_check(response, check_empty)
+    return standard_check(response, check_empty, to_dict=to_dict)
 
 
-def standard_check(response, check_empty=True) -> dict[List]:
+def standard_check(response, check_empty=True, to_dict=True) -> dict[List]:
     assert response.status_code == 200
-    data = DictObj(response.json())
+    data = response.json()
     if check_empty:
-        assert len(data.results) > 0
+        assert len(data.get("results")) > 0
+    if to_dict:
+        data = DictObj(data)         
     return data
