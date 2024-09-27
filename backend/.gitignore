@@ -7,6 +7,7 @@ site
 .coverage*
 coverage.xml
 choirapp.db
+log.txt
 
 # macOS
 .DS_Store

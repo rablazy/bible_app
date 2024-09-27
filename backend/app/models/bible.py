@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Enum
-from sqlalchemy.orm import relationship, column_property, Mapped, mapped_column
+from sqlalchemy.orm import relationship, column_property, Mapped
 from sqlalchemy import select, func
-from sqlalchemy_utils import ChoiceType
 
 from typing import List
 

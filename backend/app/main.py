@@ -31,7 +31,7 @@ if settings.BACKEND_CORS_ORIGINS:
 
 @root_router.get("/", status_code=200)
 def root(
-    request: Request,    
+    request: Request
 ) -> dict:
     """
     Root GET

@@ -16,13 +16,19 @@ def search_bible(
     *,
     db: Session = Depends(deps.get_db),
     lang: Optional[str] = None,
+    version: Optional[str] = None,
     max_results: Optional[int] = 10    
 ) -> dict:
     """
     Search for bible(s)
-    """            
+    """          
+    filters = []  
+    if lang :
+        filters.append(Bible.lang.has(code=lang))
+    if version:
+        filters.append(Bible.version.ilike(version))
     results = crud.bible.get_multi(
-        db, limit=max_results, filters=[Bible.lang.has(code=lang)] if lang else []) 
+        db, limit=max_results, filters=filters) 
     return {"results": list(results)}
 
 
