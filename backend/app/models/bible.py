@@ -73,5 +73,9 @@ class Verse(Base):
     def chapter_rank(self):
         return self.chapter.rank
     
+    @property
+    def book_rank(self):
+        return self.chapter.book.rank    
+    
     def __str__(self):
         return f"{self.chapter}.{self.rank}"

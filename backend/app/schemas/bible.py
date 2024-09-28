@@ -52,15 +52,24 @@ class BookItem(BookItemShort):
     
     
 class VerseItem(BaseModel):         
-    id : int
+    # id : int
     subtitle : Optional[Union[str, int, bytes]] = None
     content : str
     rank : int
-    chapter_id : int
+    #chapter_id : int
     chapter_rank: int
+    book_rank: int    
     
-BookItem.model_rebuild() 
-ChapterItem.model_rebuild() 
+
+class VerseItems(BaseModel):
+    results: Sequence[VerseItem] 
+    next : Optional[VerseItem] = None
+    previous: Optional[VerseItem] = None
+    
+
+    
+# BookItem.model_rebuild() 
+# ChapterItem.model_rebuild() 
         
     
     

@@ -39,17 +39,45 @@ def test_search_books(client):
     
     
 def test_get_verse(client):
-    data = get_url(client, "verse/66/15/1?chapter_end=17&verse_end=3")
-    
+    data = get_url(client, "verses/66/15?from_verse=1&to_chapter=17&to_verse=3")    
     first_verse = data.results[0]
     assert first_verse.chapter_rank == 15
     assert first_verse.subtitle is not None
-    assert first_verse.rank == 1
-    
+    assert first_verse.rank == 1    
     last_verse = data.results[-1]
     assert last_verse.chapter_rank == 17
     assert last_verse.rank == 3
     assert any(verse.chapter_rank == 16 for verse in data.results)
+    
+    data = get_url(client, "verses/19/93?from_verse=2&to_verse=4")
+    assert len(data.results) == 3
+    first_verse = data.results[0]
+    assert first_verse.chapter_rank == 93
+    assert first_verse.book_rank == 19
+    assert first_verse.subtitle is None
+    assert first_verse.rank == 2
+    last_verse = data.results[-1]
+    assert last_verse.rank == 4
+    assert last_verse.chapter_rank == 93
+    assert last_verse.book_rank == 19
+    
+    data = get_url(client, "verses/19/91?from_verse=1", check_empty=False)
+    assert len(data.results) == 16
+    
+    data = get_url(client, "verses/19/91?from_verse=1&to_chapter=93")
+    assert len(data.results) == 36
+    
+    data = get_url(client, "verses/19/91?from_verse=2&to_chapter=94&to_verse=3")
+    assert len(data.results) == 38
+    
+    # across different books
+    data = get_url(client, "verses/40/28?from_verse=2&to_book=41&to_chapter=2&to_verse=5")
+    assert len(data.results) == 69
+    
+    # new testament from Mat to Apo
+    data = get_url(client, "verses/40/1?from_verse=1&to_book=66")       
+    assert len(data.results) == 7958
+    
     
     
     
