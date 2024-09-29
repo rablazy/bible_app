@@ -7,6 +7,7 @@ from typing import Generic, Optional, Sequence, List, TypeVar, Union
 DataT = TypeVar('DataT')    
 class ListItems(BaseModel, Generic[DataT]):
     results: Sequence[DataT]   
+    count: int = 0
     
 
 class LanguageItem(BaseModel):
@@ -65,6 +66,7 @@ class VerseItems(BaseModel):
     results: Sequence[VerseItem] 
     next : Optional[VerseItem] = None
     previous: Optional[VerseItem] = None
+    count: int = 0
     
 
     

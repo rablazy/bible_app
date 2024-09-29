@@ -27,13 +27,18 @@ class CRUD(Generic[ModelType]):
         return db.query(self.model).filter(self.model.name==name).first()
     
     def get_multi(        
-        self, db: Session, *, skip: int = 0, limit: int = 5000, filters:Optional[List] = []
+        self, db: Session, *, skip: int = 0, limit: int = 5000, 
+        filters:Optional[List] = [],
+        query_only: Optional[bool] = False
     ) -> List[ModelType]:
         q = db.query(self.model)
         if filters:            
             q = q.filter(*filters)        
-        print(q)
-        return q.order_by(self.model.id).offset(skip).limit(limit).all()
+        # print(q)
+        if query_only:
+            return q
+        else:
+            return q.order_by(self.model.id).offset(skip).limit(limit).all()
         
         
     

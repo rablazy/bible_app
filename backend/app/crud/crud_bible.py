@@ -9,18 +9,21 @@ class CRUDLanguage(CRUD[Language]):
         return db.query(self.model).filter(self.model.code==code).first()
 
 
-class CRUDBible(CRUD[Bible]): ...
-    # def get_by_version_and_lang(self, db: Session, version: str, lang:str):
-    #     return db.query(Book).filter(
-    #         Book.version.ilike(version),
-    #         Book.lang.ilike(lang)
-    #         ).first()   
+class CRUDBible(CRUD[Bible]): 
+    def query_by_version_and_lang(self, db: Session, version: str, lang:str):
+        return db.query(Book).filter(
+            Book.version.ilike(version),
+            Book.lang.ilike(lang)
+        )  
 
 class CRUDBook(CRUD[Book]):...  
 
 class CRUDChapter(CRUD[Chapter]): ...
 
-class CRUDVerse(CRUD[Verse]): ...
+class CRUDVerse(CRUD[Verse]):
+    def query_by_version(self, db: Session, version:str):
+        return db.query(Verse).join(Chapter).join(Book).join(Bible).filter(Bible.version.ilike(version))
+    
     
 
 language = CRUDLanguage(Language)

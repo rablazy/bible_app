@@ -40,6 +40,7 @@ def standard_check(response, check_empty=True, to_dict=True) -> dict[List]:
     data = response.json()
     if check_empty:
         assert len(data.get("results")) > 0
+        print(data.keys())
     if to_dict:
         data = DictObj(data)         
     return data
