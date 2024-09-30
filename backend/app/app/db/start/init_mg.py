@@ -14,31 +14,17 @@ logger = logging.getLogger(__name__)
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 
-class InitDb():
+class InitMgBible():
 
     def __init__(self):
         self.db = SessionLocal()
-        self.run()
+        self.import_json_data()         
 
-    def run(self):
-        self.init_languages()
-        self.init_mlg_bible()        
-
-    def init_languages(self):
-        langs = [Language(name=lg[1], code=lg[0])
-                 for lg in [("en", "English"), ("fr", "Français"), ("mg", "Malagasy")]]
-        if not crud.language.get_multi(self.db):
-            crud.language.create_multi(self.db, langs)
-            logger.info("%s languages inserted", len(langs))
-        else:
-            logger.info("Skipping languages insert")          
-        
-
-    def init_mlg_bible(self):
+    def import_json_data(self):
         """
         Import malagasy bible version
         """          
-        baiboly_src = os.path.join(ROOT, 'data', 'bible', 'baiboly.json')
+        baiboly_src = os.path.join(ROOT, 'data', 'bible', 'mg', 'MG1886.json')
 
         with open(baiboly_src, 'r+', encoding='UTF-8') as f:
             datas = json.load(f)
@@ -115,8 +101,9 @@ class InitDb():
             
             self.check_data()
             
+    
     def check_data(self):
-        logger.info("Checking bible data right now ...")
+        logger.info("Checking mg bible data right now ...")
         
         # assert number of books inserted
         assert(self.db.query(Book).count() == 66)        
@@ -146,14 +133,13 @@ class InitDb():
             Book.rank == 44, Chapter.rank == 25, Verse.rank == 1).first()
         assert(verse.subtitle is not None)       
         
-        logger.info("Checking bible data ok !")
+        logger.info("Checking done !")
         
              
-
-
+             
 def main() -> None:
-    logger.info("Creating initial data")
-    InitDb()
+    logger.info("Creating initial MG1886 data")
+    InitMgBible()
     logger.info("Initial data created")
 
 

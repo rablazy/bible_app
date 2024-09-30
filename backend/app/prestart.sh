@@ -3,5 +3,7 @@
 # Let the DB start
 python ./app/db/db_check.py
 
+alembic upgrade head
+
 # Create initial data in DB
-python ./app/db/init_bible.py
+python ./app/db/start/init_db.py

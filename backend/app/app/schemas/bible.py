@@ -22,7 +22,7 @@ class BibleItem(BaseModel):
     
     id: int
     version: str
-    year: date | None = None
+    year: Optional[date] = None
     src: str
     lang: LanguageItem           
    

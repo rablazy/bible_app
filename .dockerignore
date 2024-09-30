@@ -1,0 +1,11 @@
+# Files ignored when building docker images:
+# https://docs.docker.com/engine/reference/builder/#dockerignore-file
+.venv
+venv
+env
+.dockerignore
+Dockerfile
+backend/Dockerfile
+frontend/
+choirapp.db
+backend/app/choirapp.db

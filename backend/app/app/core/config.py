@@ -38,7 +38,7 @@ class Settings(BaseSettings):
             return v
         raise ValueError(v)
 
-    SQLALCHEMY_DATABASE_URI: Optional[str] = "sqlite:///choirapp.db"
+    SQLALCHEMY_DATABASE_URI: Optional[str] = "sqlite:///choirapp.db" #sqlite:///choirapp.db # postgres://
     FIRST_SUPERUSER: EmailStr = "admin@choir.mg"
     FIRST_SUPERUSER_PW: str = "adminch"
     model_config = SettingsConfigDict(case_sensitive=True)
