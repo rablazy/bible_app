@@ -6,41 +6,33 @@ import json
 from app import crud
 from app.models.bible import Bible, Book, Chapter, Verse, BookTypeEnum
 from app.db.start.common import ImportBible
-from sqlalchemy import func, select, and_
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
     
 
 class ImportMgBible(ImportBible):    
         
     def version(self):
         return 'MG1886'    
+    
+    def lang(self):
+        return 'mg'
 
-    def import_json_data(self):
+    def import_data(self):
         """
         Import malagasy bible version
-        """                  
-        baiboly_src = os.path.join(ROOT, 'data', 'bible', 'mg', f'{self.version()}.json')
-        
-
-        with open(baiboly_src, 'r+', encoding='UTF-8') as f:
-            datas = json.load(f)
-                 
-            src_lang = datas["lang"]
-            lang = crud.language.get_by_code(self.db, src_lang)
-            if not lang:
-                raise ValueError(f"Source language {src_lang} not found in db")
-            
+        """ 
+        with open(self.src('json'), 'r+', encoding='UTF-8') as f:
+            datas = json.load(f)                            
             version = datas["version"]           
             
-            if not self.db.query(Bible).filter(Bible.version==version, Bible.lang==lang).count():                                               
+            if not self.exists_in_db():                                               
                 bible = Bible(
                     src = datas["created"]["name"],
                     version = version,
-                    lang = lang             
+                    lang = self.language,
+                    #description = "....."           
                 )
                 
                 crud.bible.create(self.db, bible)
@@ -131,9 +123,7 @@ class ImportMgBible(ImportBible):
         logger.info("Checking done !")
         
         
-    
-             
-             
+        
 def main() -> None:
     logger.info("Creating initial MG1886 data")
     ImportMgBible()

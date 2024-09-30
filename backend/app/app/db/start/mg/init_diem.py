@@ -7,74 +7,66 @@ from app import crud
 from app.models.bible import Bible, Language, Book, Chapter, Verse, BookTypeEnum
 from app.db.session import SessionLocal
 from app.db.start.common import ImportBible
-from sqlalchemy import func, select, and_
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
-
+# {
+#         "lang": "mg", 
+#         "version": "DIEM", 
+#         "description": "Baiboly Dikan-teny Iombonana Malagasy", 
+#         "src": "internet", 
+#         "src_url": "https://www.bicaso.fr/Bible.html", 
+#         "books": [
+#             {"rank": 1, 
+#             "name": "Genes\u1ef3",             
+#             "short_name": "GEN", 
+#             "classification": "Fiandohana", 
+#             "chaps": [
+#                 {
+#                     "book_rank": 1, 
+#                     "rank": 1, 
+#                     "verses": [
+#                         {
+#                             "rank": 1, 
+#                             "text": "Tamin'ny fiandohana, fony Andriamanitra nahary ny lanitra sy ny tany."
+#                         }, 
+#                         {
+#                             "rank": 2, 
+#                             "text": "dia tsy nisy endriny sady foana ny tany fa ny haizina 
+#                                 no nandrakotra ny lalina, ary ny Fanahin'Andriamanitra no nanomba tambonin'ny rano."
+#                         }
+#                 }
+#             ]
+#         ]
+#     }
 
 class ImportDiemBible(ImportBible):
     
-    """Import Diem bible in next format
-    {
-        "lang": "mg", 
-        "version": "DIEM", 
-        "description": "Baiboly Dikan-teny Iombonana Malagasy", 
-        "src": "internet", 
-        "src_url": "https://www.bicaso.fr/Bible.html", 
-        "books": [
-            {"rank": 1, 
-            "name": "Genes\u1ef3",             
-            "short_name": "GEN", 
-            "classification": "Fiandohana", 
-            "chaps": [
-                {
-                    "book_rank": 1, 
-                    "rank": 1, 
-                    "verses": [
-                        {
-                            "rank": 1, 
-                            "text": "Tamin'ny fiandohana, fony Andriamanitra nahary ny lanitra sy ny tany."
-                        }, 
-                        {
-                            "rank": 2, 
-                            "text": "dia tsy nisy endriny sady foana ny tany fa ny haizina 
-                                no nandrakotra ny lalina, ary ny Fanahin'Andriamanitra no nanomba tambonin'ny rano."
-                        }
-                }
-            ]
-        ]
-    }
+    """Import Diem bible in next format    
     """
 
     def version(self):
-        return 'DIEM'        
+        return 'DIEM'      
+    
+    def lang(self):
+        return 'mg'  
 
-    def import_json_data(self):
+    def import_data(self):
         """
         Import malagasy diem bible version
-        """          
-        baiboly_src = os.path.join(ROOT, 'data', 'bible', 'mg', 'DIEM.json')
-
-        with open(baiboly_src, 'r+', encoding='utf-8-sig') as f:
-            datas = json.load(f)
-                 
-            src_lang = datas["lang"]
-            lang = crud.language.get_by_code(self.db, src_lang)
-            if not lang:
-                raise ValueError(f"Source language {src_lang} not found in db")
-            
+        """                 
+        with open(self.src('json'), 'r+', encoding='utf-8-sig') as f:
+            datas = json.load(f)                
             version = datas["version"]           
             
-            if not self.db.query(Bible).filter(Bible.version==version, Bible.lang==lang).count():                                               
+            if not self.exists_in_db():                                               
                 bible = Bible(
                     src = datas["src"],
                     src_url = datas["src_url"],
                     version = version,
                     description = datas["description"],
-                    lang = lang             
+                    lang = self.language             
                 )
                 
                 crud.bible.create(self.db, bible)
