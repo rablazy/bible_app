@@ -20,12 +20,15 @@ import enum
 class BookTypeEnum(enum.Enum):
     OLD = 'Old'
     NEW = 'New'
+    APOCRYPHAL = 'Apocryphal'
 
 class Bible(Base):
     id = Column(Integer, primary_key=True, index=True)
     version = Column(String(128))
+    description = Column(String(1024))    
     year = Column(Integer)
-    src = Column(String(128))
+    src = Column(String(1024))
+    src_url = Column(String(1024))
     lang_id = Column(Integer, ForeignKey('language.id'))
     lang = relationship('Language')
     
@@ -45,10 +48,11 @@ class Chapter(Base):
 
 class Book(Base):    
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(120), unique=True)
+    name = Column(String(120))
     short_name = Column(String(10))
     rank = Column(Integer, nullable=False)
-    category =  Column(Enum(BookTypeEnum, nullable=False))
+    classification = Column(String(256))
+    category =  Column(Enum(BookTypeEnum, nullable=False))    
     bible_id = Column(Integer, ForeignKey('bible.id'))
     bible = relationship('Bible')
     chapters : Mapped[List["Chapter"]] = relationship(back_populates="book")     
