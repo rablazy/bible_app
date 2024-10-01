@@ -15,18 +15,40 @@ def main() -> None:
     init_languages()
     
     bibles = [
-        { "lang" : "mg", "version" : "DIEM", "file_encoding" : "utf-8-sig", "validation_rules" : DIEM_RULES},
-        { "lang" : "en", "version" : "KJV", "file_encoding" : "utf-8-sig", "validation_rules" : KJV_RULES},
-        { "lang" : "fr", "version" : "LSG_21", "file_encoding" : "utf-8-sig", "validation_rules" : STANDARD_RULES},
-        { "lang" : "mg", "version" : "BKM", "file_encoding" : "utf-8-sig", "validation_rules" : DIEM_RULES}, # change rules
-    ]    
-    # ImportMgBible(lang='mg', version="MG1886", )
+        {
+            "lang" : "mg", "version" : "MG1886", 
+            "file_encoding" : "utf-8-sig", "validation_rules" : STANDARD_RULES # customize
+        }, 
+        { 
+            "lang" : "mg", "version" : "DIEM", 
+            "file_encoding" : "utf-8-sig", "validation_rules" : DIEM_RULES
+        },
+        { 
+            "lang" : "en", "version" : "KJV", 
+            "file_encoding" : "utf-8-sig", "validation_rules" : KJV_RULES},
+        { 
+            "lang" : "fr", "version" : "LSG_21", 
+            "file_encoding" : "utf-8-sig", "validation_rules" : STANDARD_RULES
+        },
+        { 
+            "lang" : "mg", "version" : "BKM", 
+            "file_encoding" : "utf-8-sig", "validation_rules" : DIEM_RULES # change rules
+        }, 
+    ]          
     
     for b in bibles:
         importer = ImportBible(**b)
         importer.run_import()
     
-    logger.info("Initial data created")
+    # old import
+    # importer = ImportMgBible(lang='mg', version="MG1886", file_encoding="utf-8")
+    # importer.run_import()
+    
+    # reverse old import to uniformize format across all imports
+    # from app.db.start.mg.reverse_mg1886 import ReverseData
+    # ReverseData().run()    
+    
+    logger.info("Init done !")
 
 
 if __name__ == "__main__":

@@ -26,7 +26,7 @@ class BibleItem(BaseModel):
     src: str = None
     description: str = None
     src_url: Optional[str] = None
-    lang: LanguageItem  
+    lang: LanguageItem
     
     books : Optional[List["BookItem"]] = []         
    
@@ -42,30 +42,32 @@ class BookItemShort(BaseModel):
     rank : int
     category : str = None
     classification : Optional[str] = None
-    bible_id : int = -1
+    bible_id : Optional[int] = None
     chapter_count: int = 0                           
 
 
 class ChapterItem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     # id : int
     rank : int
-    book_id : int = -1
-    book_rank: int      
-    verses : List["VerseItem"]
+    book_id : Optional[int] = None
+    book_rank: Optional[int] = None  
+    verses : List["VerseItem"] = []
 
-class BookItem(BookItemShort):   
+class BookItem(BookItemShort):       
     model_config = ConfigDict(from_attributes=True) 
-    chapters : List[ChapterItem]
+    chapters : List[ChapterItem] = []
     
     
-class VerseItem(BaseModel):         
+class VerseItem(BaseModel):        
+    model_config = ConfigDict(from_attributes=True) 
     # id : int
     subtitle : Optional[Union[str, int, bytes]] = None
     content : str
     rank : int
     #chapter_id : int
-    chapter_rank: int = -1
-    book_rank: int = -1
+    chapter_rank: Optional[int] = None
+    book_rank: Optional[int] = None
     
 
 class VerseItems(BaseModel):
