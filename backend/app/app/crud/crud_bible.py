@@ -11,9 +11,9 @@ class CRUDLanguage(CRUD[Language]):
 
 class CRUDBible(CRUD[Bible]): 
     def query_by_version_and_lang(self, db: Session, version: str, lang:str):
-        return db.query(Book).filter(
-            Book.version.ilike(version),
-            Book.lang.ilike(lang)
+        return db.query(Bible).join(Language).filter(
+            Bible.version.ilike(version),
+            Language.code.ilike(lang)
         )  
 
 class CRUDBook(CRUD[Book]):...  
