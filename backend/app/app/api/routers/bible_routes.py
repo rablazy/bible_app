@@ -47,7 +47,7 @@ def search_books(
     *,
     version: str,
     book_type: Optional[str] = Query(
-        "All", enum=[BookTypeEnum.OLD.value, BookTypeEnum.NEW.value]),
+        "All", enum=[BookTypeEnum.OLD.value, BookTypeEnum.NEW.value, BookTypeEnum.APOCRYPHAL.value]),
     short_name: Optional[str] = None,
     offset : Optional[int] = 0,
     max_results: Optional[int] = 100,
@@ -109,7 +109,7 @@ def search_verses(
    
     if start_verse and end_verse:
         base_q = crud.verse.query_by_version(db, version)
-        q = base_q.filter(Verse.id >= start_verse.id, Verse.id <= end_verse.id)                              
+        q = base_q.filter(Verse.id >= start_verse.id, Verse.id <= end_verse.id)       
         return {
             "results": list(q.offset(offset).limit(max_results).all()), 
             "count": q.count(),

@@ -9,3 +9,4 @@ backend/Dockerfile
 frontend/
 choirapp.db
 backend/app/choirapp.db
+backend/app/app/utils/bicaso

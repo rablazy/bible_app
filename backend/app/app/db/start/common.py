@@ -64,7 +64,7 @@ class ImportBible:
             raise NotImplementedError
     
     def check_data(self): # you can override this method if you don't like it
-        logger.info("Checking bible data right now ...")          
+        logger.info("Checking bible %s data right now ...", self.version)          
         self.check_rules(self.validation_rules)
         logger.info("Checking done !")        
         
@@ -175,7 +175,7 @@ class ImportBible:
         assert(self.q_chapter().filter(Book.rank == book_rank).count() == expected_chapter_count)
         
     def count_verse(self, book_rank, chapter_rank, expected):
-        logger.info("Check %s.%s => %s", book_rank, chapter_rank, expected)
+        # logger.info("Check %s.%s => %s", book_rank, chapter_rank, expected)
         assert(self.q_verse().filter(Book.rank == book_rank, Chapter.rank==chapter_rank).count() == expected)
         
     def verse_text(self, book_rank, chapter_rank, verse_rank, expected):        

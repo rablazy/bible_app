@@ -1,4 +1,3 @@
-# import pandas as pd
 import csv
 import json
 from typing import List
@@ -8,8 +7,6 @@ import pathlib
 ROOT = pathlib.Path(__file__).resolve().parent
 
 
-
-    
 class Ouput :   
     
     def __init__(self, books, *args, **kwargs) -> None:                
@@ -56,10 +53,16 @@ def importer(
     for verse_file in [verse_file_old, verse_file_new]:
         verses = list(csv.reader(open(verse_file, 'r', encoding=encoding), delimiter=delimiter))      
         for i, verse in enumerate(verses):
-            if len(verse):
-                book_code, chapter_rank, verse_rank, content = verse[0], int(verse[1]), int(verse[2]), verse[4].strip()
+            if len(verse):                
+                book_code, chapter_rank, verse_rank, content = verse[0], int(verse[1]), int(verse[2]), verse[4].strip()                 
+                subtitle = None
+                if content and content.startswith("["):
+                    x = content.rfind(']')
+                    if x :
+                        subtitle = content[0:x+1]
+                        content = content[x+1:].strip()              
                 book = books.get(book_code) 
-                book.add_verse(chapter_rank, Verse(verse_rank, content))
+                book.add_verse(chapter_rank, Verse(verse_rank, content, subtitle))
         
     
     book_values = list(books.values())
@@ -91,7 +94,23 @@ def main():
         "description": "King James Version Bible",
         "src" : "internet",
         "src_url" : "https://www.bicaso.fr/Bible.html"
-    })      
+    })  
+    
+    importer(infos={
+        "lang" : { "code" : "fr", "name" : "Français" },
+        "version": "LSG_21",
+        "description": "Bible Louis Second 21ème siecle",
+        "src" : "internet",
+        "src_url" : "https://www.bicaso.fr/Bible.html"
+    }) 
+    
+    importer(infos={
+        "lang" : { "code" : "mg", "name" : "Malagasy" },
+        "version": "BKM",
+        "description": "Baiboly Katolika Malagasy",
+        "src" : "internet",
+        "src_url" : "https://www.bicaso.fr/Bible.html"
+    })   
     
     
     
@@ -126,8 +145,7 @@ class Book:
     
 class Verse :    
     rank : int
-    content : str
-    content : str
+    content : str    
     
     def __init__(self, rank, content, subtitle=None) -> None:
         self.rank = rank

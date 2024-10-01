@@ -1,0 +1,73 @@
+﻿01 - Jenezy	01O	50	gen_	Fiandohana 
+02 - Eksaody	02O	40	exo_	Fahafahana 
+03 - Levitika	03O	27	lev_	Fisoronana 
+04 - Fanisana	04O	36	num_	Fanisana 
+05 - Detoronomy	05O	34	deu_	Famerenan-teny 
+06 - Josoe	06O	24	josh_	Bokin'ny Tantara
+07 - Mpitsara	07O	21	jud_	Bokin'ny Tantara
+08 - Rota	08O	4	rut_	Bokin'ny Tantara
+09 - 1 Samoela	09O	31	1sam_	Bokin'ny Tantara
+10 - 2 Samoela	10O	24	2sam_	Bokin'ny Tantara
+11 - 1 Mpanjaka	11O	22	1kin_	Bokin'ny Tantara
+12 - 2 Mpanjaka	12O	25	2kin_	Bokin'ny Tantara
+13 - 1 Tantara	13O	29	1chr_	Bokin'ny Tantara
+14 - 2 Tantara	14O	36	2chr_	Bokin'ny Tantara
+15 - Esdrasa	15O	10	ezr_	Bokin'ny Tantara
+16 - Nehemia	16O	13	neh_	Bokin'ny Tantara
+17 - Estera	17O	16	est_	Bokin'ny Tantara
+18 - Joba	18O	42	job_	Bokin'ny Tantara
+19 - Salamo	19O	150	psa_	Boky poetika
+20 - Ohabolana	20O	31	pro_	Boky poetika
+21 - Mpitoriteny	21O	12	ecc_	Boky poetika
+22 - Tononkira dia tononkira	22O	8	song_	Boky poetika
+23 - Izaia	23O	66	isa_	Mpaminany 
+24 - Jeremia	24O	52	jer_	Mpaminany 
+25 - Fitomanian'i Jeremia	25O	5	lam_	Mpaminany 
+26 - Ezekiela	26O	48	eze_	Mpaminany 
+27 - Daniela	27O	14	dan_	Mpaminany 
+28 - Osea	28O	14	hos_	Mpaminany 
+29 - Joely	29O	4	joe_	Mpaminany 
+30 - Amosy	30O	9	amos_	Mpaminany 
+31 - Abdiasa	31O	1	obadiah_	Mpaminany 
+32 - Jonasa	32O	4	jonah_	Mpaminany 
+33 - Mikea	33O	7	mic_	Mpaminany 
+34 - Nahoma	34O	3	nah_	Mpaminany 
+35 - Habakòka	35O	3	hab_	Mpaminany 
+36 - Sofonia	36O	3	zep_	Mpaminany 
+37 - Akjea	37O	2	hag_	Mpaminany 
+38 - Zakaria	38O	14	zec_	Mpaminany 
+39 - Malakia	39O	3	mal_	Mpaminany 
+40 - Matio	40N	28	mat_	Evanjely
+41 - Marka	41N	16	mar_	Evanjely
+42 - Lioka	42N	24	luk_	Evanjely
+43 - Joany	43N	21	joh_	Evanjely
+44 - Asan'ny Apostoly	44N	28	act_	Asan'ny Apostoly
+45 - Romana	45N	16	rom_	Epistolan'i Paoly
+46 - 1 Korintiana	46N	16	1cor_	Epistolan'i Paoly
+47 - 2 Korintiana	47N	13	2cor_	Epistolan'i Paoly
+48 - Galata	48N	6	gal_	Epistolan'i Paoly
+49 - Efeziana	49N	6	eph_	Epistolan'i Paoly
+50 - Filipiana	50N	4	phi_	Epistolan'i Paoly
+51 - Kolosiana	51N	4	col_	Epistolan'i Paoly
+52 - 1 Tesalonisiana	52N	5	1the_	Epistolan'i Paoly
+53 - 2 Tesalonisiana	53N	3	2the_	Epistolan'i Paoly
+54 - 1 Timote	54N	6	1tim_	Epistolan'i Paoly
+55 - 2 Timote	55N	4	2tim_	Epistolan'i Paoly
+56 - Tito	56N	3	tit_	Epistolan'i Paoly
+57 - Filemona	57N	1	phl_	Epistolan'i Paoly
+58 - Hebrio	58N	13	heb_	Epistolan'i Paoly
+59 - Jakoba	59N	5	jam_	Epistola fanampiny
+60 - 1 Piera	60N	5	1pet_	Epistola fanampiny
+61 - 2 Piera	61N	3	2pet_	Epistola fanampiny
+62 - 1 Joany	62N	5	1joh_	Epistola fanampiny
+63 - 2 Joany	63N	1	2joh_	Epistola fanampiny
+64 - 3 Joany	64N	1	3joh_	Epistola fanampiny
+65 - Joda	65N	1	jude_	Epistola fanampiny
+66 - Apokalypsa	66N	22	rev_	Fanambaràna
+67 - Tobia	67O	14		Deutérocanonique
+68 - Jodita	68O	16		Deutérocanonique
+69 - 1 Makabeo	69O	16		Deutérocanonique
+70 - 2 Makabeo	70O	15		Deutérocanonique
+71 - Ekleziastika	71O	51		Deutérocanonique
+72 - Fahendrena	72O	19		Deutérocanonique
+73 - Baroka	73O	6		Deutérocanonique

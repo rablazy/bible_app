@@ -11,12 +11,17 @@ STANDARD_RULES = {
     RulesEnum.BOOK_CHAPTER_COUNT: [27, 12], # DAN 12 chapters        
     RulesEnum.VERSE_COUNT: [28, 4, 19], # HOS 4 - 19 verses       
     RulesEnum.VERSE_COUNT: [49, 6, 24], # EFE  6 - 24 verses
+    
+    # check subtitle for mg1886
+}
+
+KJV_RULES = {
     RulesEnum.VERSE_TEXT: [
         66, 20, 11, 
         "And I saw a great white throne, and him that sat on it, from whose face the earth and the heaven fled away; and there was found no place for them."
     ]
-    # check subtitle for mg1886
 }
+KJV_RULES.update(STANDARD_RULES)
 
 DIEM_RULES = {
     RulesEnum.BOOK_COUNT: [73],
