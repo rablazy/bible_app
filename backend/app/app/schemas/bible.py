@@ -24,6 +24,7 @@ class BibleItem(BaseModel):
     version: str
     year: Optional[date] = None
     src: str
+    src_url: Optional[str] = None
     lang: LanguageItem           
    
     # class Config:

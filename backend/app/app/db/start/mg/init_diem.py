@@ -43,22 +43,16 @@ logger = logging.getLogger(__name__)
 
 class ImportDiemBible(ImportBible):
     
-    """Import Diem bible in next format    
+    """Import Diem bible
     """
-
-    def version(self):
-        return 'DIEM'      
     
-    def lang(self):
-        return 'mg'  
-
     def import_data(self):
         """
         Import malagasy diem bible version
-        """                 
-        with open(self.src('json'), 'r+', encoding='utf-8-sig') as f:
+        """           
+        with open(self.file_path, 'r+', encoding=self.file_encoding) as f:
             datas = json.load(f)                
-            version = datas["version"]           
+            version = datas["version"]                       
             
             if not self.exists_in_db():                                               
                 bible = Bible(

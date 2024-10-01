@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 def main() -> None:
     logger.info("Creating initial data")
     init_languages()
-    ImportMgBible()
-    ImportDiemBible()
+    ImportMgBible(lang='mg', version="MG1886", )
+    ImportDiemBible(lang="mg", version="DIEM", file_encoding="utf-8-sig")
     logger.info("Initial data created")
 
 

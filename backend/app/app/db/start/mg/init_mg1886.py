@@ -11,19 +11,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
     
 
-class ImportMgBible(ImportBible):    
-        
-    def version(self):
-        return 'MG1886'    
-    
-    def lang(self):
-        return 'mg'
-
+class ImportMgBible(ImportBible):            
+   
     def import_data(self):
         """
         Import malagasy bible version
-        """ 
-        with open(self.src('json'), 'r+', encoding='UTF-8') as f:
+        """        
+        with open(self.file_path, 'r+', encoding=self.file_encoding) as f:
             datas = json.load(f)                            
             version = datas["version"]           
             
@@ -89,8 +83,7 @@ class ImportMgBible(ImportBible):
                             chapter.verses.append(verse)
 
                 self.db.commit()
-                logger.info("%s book inserted.", order)
-            
+                logger.info("%s book inserted.", order)            
             
     
     def check_data(self):
