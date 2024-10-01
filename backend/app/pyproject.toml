@@ -19,6 +19,7 @@ pydantic-settings = "^2.5.2"
 httpx = "^0.27.2"
 bump-pydantic = "^0.8.0"
 gunicorn = "^23.0.0"
+pydash = "^8.0.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^8.3.3"

@@ -20,12 +20,15 @@ class BibleItem(BaseModel):
     
     model_config = ConfigDict(from_attributes=True) #extra='allow|ignore', 
     
-    id: int
+    # id: int
     version: str
     year: Optional[date] = None
-    src: str
+    src: str = None
+    description: str = None
     src_url: Optional[str] = None
-    lang: LanguageItem           
+    lang: LanguageItem  
+    
+    books : Optional[List["BookItem"]] = []         
    
     # class Config:
     #     from_attributes = True         
@@ -33,20 +36,22 @@ class BibleItem(BaseModel):
 
 class BookItemShort(BaseModel):   
     model_config = ConfigDict(from_attributes=True)
-    id : int
+    # id : int
     name : str
-    short_name : str
+    short_name : str = None
     rank : int
-    category : str
-    bible_id : int
+    category : str = None
+    classification : Optional[str] = None
+    bible_id : int = -1
     chapter_count: int = 0                           
 
 
 class ChapterItem(BaseModel):
-    id : int
+    # id : int
     rank : int
-    book_id : int    
-    #verses : List[VerseItem]
+    book_id : int = -1
+    book_rank: int      
+    verses : List["VerseItem"]
 
 class BookItem(BookItemShort):   
     model_config = ConfigDict(from_attributes=True) 
@@ -59,8 +64,8 @@ class VerseItem(BaseModel):
     content : str
     rank : int
     #chapter_id : int
-    chapter_rank: int
-    book_rank: int    
+    chapter_rank: int = -1
+    book_rank: int = -1
     
 
 class VerseItems(BaseModel):
@@ -70,9 +75,9 @@ class VerseItems(BaseModel):
     count: int = 0
     
 
-    
-# BookItem.model_rebuild() 
-# ChapterItem.model_rebuild() 
+BibleItem.model_rebuild()  
+ChapterItem.model_rebuild()
+# BookItem.model_rebuild()  
         
     
     
