@@ -2,7 +2,7 @@ import logging
 
 from app.db.start.init_langs import init_languages
 from app.db.start.common import ImportBible
-from app.db.start.rules import DIEM_RULES
+from app.db.start.rules import DIEM_RULES, STANDARD_RULES
 
 
 logging.basicConfig(level=logging.INFO)
@@ -15,7 +15,8 @@ def main() -> None:
     init_languages()
     
     bibles = [
-        { "lang" : "mg", "version" : "DIEM", "file_encoding" : "utf-8-sig", "validation_rules" : DIEM_RULES}
+        { "lang" : "mg", "version" : "DIEM", "file_encoding" : "utf-8-sig", "validation_rules" : DIEM_RULES},
+        { "lang" : "en", "version" : "KJV", "file_encoding" : "utf-8-sig", "validation_rules" : STANDARD_RULES},
     ]    
     # ImportMgBible(lang='mg', version="MG1886", )
     

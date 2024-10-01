@@ -26,6 +26,7 @@ class RulesEnum(enum.Enum):
     BOOK_CATEGORY = "book_category"
     BOOK_CHAPTER_COUNT = "book_chapter_count"
     VERSE_COUNT = "count_verse"
+    VERSE_TEXT = "verse_text"
 
 class ImportBible:
     
@@ -173,5 +174,15 @@ class ImportBible:
     def book_chapter_count(self, book_rank, expected_chapter_count):              
         assert(self.q_chapter().filter(Book.rank == book_rank).count() == expected_chapter_count)
         
-    def count_verse(self, book_rank, chapter_rank, exoected):
-        assert(self.q_verse().filter(Book.rank == book_rank, Chapter.rank==chapter_rank).count() == exoected)  
+    def count_verse(self, book_rank, chapter_rank, expected):
+        logger.info("Check %s.%s => %s", book_rank, chapter_rank, expected)
+        assert(self.q_verse().filter(Book.rank == book_rank, Chapter.rank==chapter_rank).count() == expected)
+        
+    def verse_text(self, book_rank, chapter_rank, verse_rank, expected):        
+        v = self.q_verse().filter(
+                Book.rank == book_rank, 
+                Chapter.rank == chapter_rank,
+                Verse.rank == verse_rank
+            ).first()         
+        assert(v is not None and v.content == expected)
+            
