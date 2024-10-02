@@ -38,7 +38,8 @@ class BookItemShort(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     # id : int
     name : str
-    short_name : str = None
+    short_name : Optional[str] = None
+    code: Optional[str] = None
     rank : int
     category : str = None
     classification : Optional[str] = None

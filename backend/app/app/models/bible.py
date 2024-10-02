@@ -50,6 +50,7 @@ class Book(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(120))
     short_name = Column(String(10))
+    code = Column(String(10))
     rank = Column(Integer, nullable=False)
     classification = Column(String(256))
     category =  Column(Enum(BookTypeEnum, nullable=False))    

@@ -1,13 +1,18 @@
 import enum
 import logging
 import os
+import csv
 import pydantic_core
+import tempfile
+
 from pydash import omit
+from zipfile import ZipFile
+from pydantic import create_model
 
 from app import crud
-from app.models.bible import Bible, Book, BookTypeEnum, Chapter, Verse, Language
+from app.models.bible import *
+from app.schemas.bible import *
 from app.db.session import SessionLocal
-from app.schemas.bible import BibleItem
 
 import pathlib
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -33,7 +38,7 @@ class RulesEnum(enum.Enum):
 class BibleValidator:
     
     def __init__(self, bible_id: int, rules: dict = {}) -> None:
-        if bible_id <= 0:
+        if not bible_id or bible_id <= 0:
             raise ValueError("Set a valid value to bible_id")
         self.db = SessionLocal()
         self.bible_id = bible_id
@@ -68,7 +73,7 @@ class BibleValidator:
         assert(self._q_verse().filter(
             Book.rank == book_rank, Chapter.rank==chapter_rank).count() == expected)
         
-    def verse_text(self, book_rank, chapter_rank, verse_rank, expected):        
+    def verse_text(self, book_rank, chapter_rank, verse_rank, expected):            
         v = self._q_verse().filter(
                 Book.rank == book_rank, 
                 Chapter.rank == chapter_rank,
@@ -86,13 +91,32 @@ class BibleValidator:
         return self.db.query(Verse).join(Chapter).join(Chapter.book).filter(*self.version_filter)
                     
 
+def importer_cls(*args, **kwargs):
+    src_type = kwargs.get('src_type', None)
+    if src_type == "standard_json":
+        return JsonBible(*args, **kwargs)
+    elif src_type == "bicaso":    
+        return BicasoBible(*args, **kwargs)
+    else:
+        return BibleImporter(*args, **kwargs)
+
 class BibleImporter:
+    
+    @classmethod
+    def get_instance(cls, src_type, *args, **kwargs):
+        if src_type == "standard_json":
+            return JsonBible(*args, **kwargs)
+        elif src_type == "bicaso":    
+            return BicasoBible(*args, **kwargs)
+        else:
+            return BibleImporter(*args, **kwargs)
+    
 
     def __init__(self,
                  lang: str,
-                 version: str,   
-                 encoding: str =  "UTF-8",                              
-                 validation_rules: dict = {}
+                 version: str,                                     
+                 validation_rules: dict = {},  
+                 **kwargs               
         ):
         self.db = SessionLocal()
         self.lang = lang
@@ -103,9 +127,10 @@ class BibleImporter:
         self.bible_id = None
         self.validation_rules = validation_rules
         
-        self.file_path = None
+        self.file_path = kwargs.get('file_path', None)        
+        self.file_name = kwargs.get('file_name', None) 
+        self.file_encoding = kwargs.get('encoding', "UTF-8")               
         self.file_type = None
-        self.file_encoding = encoding               
 
 
     def import_version(self, bible_item: BibleItem):
@@ -123,7 +148,12 @@ class BibleImporter:
             
             books = bible_item.books
             for b in books:                
-                book = Book(**(omit(b.__dict__, "chapters", "chapter_count")))
+                book = Book(**(omit(b.__dict__, "chapters", "chapter_count"))) 
+                if not book.short_name: 
+                    if book.name[0].isdigit() or book.name.startswith("I") or book.name.startswith("II"):
+                        book.short_name = book.name[:5]  
+                    else:
+                        book.short_name = book.name[:3]              
                 book.category = BookTypeEnum(b.category)
                 book.bible_id = bible.id
                 crud.book.create(self.db, book)
@@ -147,9 +177,10 @@ class BibleImporter:
             
         return self.bible_id
 
-    def run_import(self):         
-        self.import_data()         
-        self.validate_data()     
+    def run_import(self, validate=True):         
+        self.import_data()   
+        if validate:      
+            self.validate_data()     
         
     def import_data(self):                
         raise NotImplementedError
@@ -168,7 +199,10 @@ class BibleImporter:
         Returns:
             str: full path
         """
-        return os.path.join(ROOT, 'data', 'bible', self.lang, f"{self.version}.{self.file_type}")  
+        if self.file_name:
+            return os.path.join(ROOT, 'data', 'bible', self.lang, self.file_name)
+        else:  
+            return os.path.join(ROOT, 'data', 'bible', self.lang, f"{self.version}.{self.file_type}")  
         
     def _init_language(self):
         """Checks if lang to be used exists in db
@@ -205,5 +239,80 @@ class JsonBible(BibleImporter):
             datas = f.read()  
             bible_item = BibleItem.model_validate(pydantic_core.from_json(datas))  
             super().import_version(bible_item)                                       
+     
                               
+class BicasoBible(BibleImporter):
+    
+    def __init__(self, *args, **kwargs):
+        super(BicasoBible, self).__init__(*args, **kwargs)
+        self.file_type = 'zip'
+        
+    def import_data(self):        
+        zip_file = self.file_path or self.default_file_path()   
+        zf = ZipFile(zip_file)
+        with tempfile.TemporaryDirectory() as tempdir:
+            zf.extractall(tempdir)        
+            chap_file = os.path.join(tempdir, self.version, 'Livre_chap.txt')               
+            entries = list(csv.reader(open(chap_file, 'r'), delimiter='\t')) 
+        
+            books = dict()      
+            for i, entry in enumerate(entries):                                      
+                b = BookItem(
+                    rank = i + 1,
+                    name =((entry[0].split('-'))[1]).strip(),                                                             
+                    code = entry[3],                           
+                    classification = entry[4].strip(), 
+                    chapter_count = int(entry[2]),                      
+                )
+                # b.short_name = b.name[:5] if b.name[0].isdigit() else b.name[:3]
+                b.chapters = [ChapterItem(rank=0)] * (b.chapter_count)
                 
+                if b.rank < 40 :
+                    b.category = "Old"
+                else:
+                    if b.rank <= 66:
+                        b.category = "New"
+                    else:        
+                        b.category = "Apocryphal"                        
+                
+                books[entry[1]] = b                                   
+                
+            for verse_file in [
+                os.path.join(tempdir, self.version, f'{self.version}-O.txt'),
+                os.path.join(tempdir, self.version, f'{self.version}-N.txt')
+            ]:
+                verses = list(csv.reader(open(verse_file, 'r', 
+                                              encoding=self.file_encoding), delimiter='\t'))      
+                for i, verse in enumerate(verses):
+                    if len(verse):                
+                        book_code, chapter_rank, verse_rank, content = verse[0], int(verse[1]), int(verse[2]), verse[4].strip()                 
+                        subtitle = None
+                        if content and content.startswith("["):
+                            x = content.rfind(']')
+                            if x :
+                                subtitle = content[0:x+1]
+                                content = content[x+1:].strip()              
+                        book = books.get(book_code) 
+                        chap_index = chapter_rank - 1                       
+                        if book.chapters[chap_index].rank == 0:
+                            book.chapters[chap_index] = ChapterItem(rank=chapter_rank)
+                        book.chapters[chap_index].verses.append(VerseItem(
+                            rank = verse_rank,
+                            subtitle = subtitle,
+                            content = content
+                        ))                          
+        
+        bible_item = BibleItem(**{
+            "src" : "bicaso",
+            "description" : (self.file_name.rsplit(".", 1)[0].split("-",1)[1]).strip(),
+            "src_url" : "https://www.bicaso.fr/Bible.html",
+            "version" : self.version,
+            "lang" : self.language,
+            "books": books.values()
+        })                   
+             
+        # out_file = os.path.join(os.path.dirname(zip_file), f'{self.version}.json')
+        # with open(out_file, 'w', encoding="utf-8") as fp:
+        #     fp.write(bible_item.model_dump_json(indent=2))                
+        
+        super().import_version(bible_item)              

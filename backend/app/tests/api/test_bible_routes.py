@@ -33,13 +33,13 @@ def test_search_books(client):
     data = get_url(client, f"{MG_VERSION}/books?max_results=5&book_type={BookTypeEnum.NEW.value}")
     assert len(data.results) == 5
     book = data.results[-1]
-    assert book.short_name == "ASA"
+    assert book.short_name == "Asa"
     assert book.chapter_count == 28
     
     data = get_url(client, f"{MG_VERSION}/books?offset=10&max_results=20&book_type={BookTypeEnum.OLD.value}")
     assert len(data.results) == 20
-    assert data.results[0].short_name == "1 MPA"
-    assert data.results[-1].short_name == "AMO"
+    assert data.results[0].short_name == "I Mpan"
+    assert data.results[-1].short_name == "Amo"
     
     data = get_url(client, f"{MG_VERSION}/books")
     assert len(data.results) == 66
