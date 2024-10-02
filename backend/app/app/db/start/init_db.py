@@ -1,7 +1,7 @@
 import logging
 
 from app.db.start.init_langs import init_languages
-from app.db.start.common import ImportBible
+from app.db.start.common import JsonBible
 from app.db.start.rules import *
 
 
@@ -17,27 +17,27 @@ def main() -> None:
     bibles = [
         {
             "lang" : "mg", "version" : "MG1886", 
-            "file_encoding" : "utf-8-sig", "validation_rules" : STANDARD_RULES # customize
+            "encoding" : "utf-8", "validation_rules" : STANDARD_RULES # customize
         }, 
-        { 
-            "lang" : "mg", "version" : "DIEM", 
-            "file_encoding" : "utf-8-sig", "validation_rules" : DIEM_RULES
-        },
-        { 
-            "lang" : "en", "version" : "KJV", 
-            "file_encoding" : "utf-8-sig", "validation_rules" : KJV_RULES},
-        { 
-            "lang" : "fr", "version" : "LSG_21", 
-            "file_encoding" : "utf-8-sig", "validation_rules" : STANDARD_RULES
-        },
-        { 
-            "lang" : "mg", "version" : "BKM", 
-            "file_encoding" : "utf-8-sig", "validation_rules" : DIEM_RULES # change rules
-        }, 
+        # { 
+        #     "lang" : "mg", "version" : "DIEM", 
+        #     "encoding" : "utf-8-sig", "validation_rules" : DIEM_RULES
+        # },
+        # { 
+        #     "lang" : "en", "version" : "KJV", 
+        #     "encoding" : "utf-8-sig", "validation_rules" : KJV_RULES},
+        # { 
+        #     "lang" : "fr", "version" : "LSG_21", 
+        #     "encoding" : "utf-8-sig", "validation_rules" : STANDARD_RULES
+        # },
+        # { 
+        #     "lang" : "mg", "version" : "BKM", 
+        #     "encoding" : "utf-8-sig", "validation_rules" : DIEM_RULES # change rules
+        # }, 
     ]          
     
     for b in bibles:
-        importer = ImportBible(**b)
+        importer = JsonBible(**b)
         importer.run_import()
     
     # old import
