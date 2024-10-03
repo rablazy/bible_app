@@ -1,5 +1,5 @@
 from app.models.bible import BookTypeEnum
-from app.db.start.common import RulesEnum
+from app.db.start.import_version import RulesEnum
 
 STANDARD_RULES = {
     RulesEnum.BOOK_COUNT: [66],    

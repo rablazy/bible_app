@@ -1,7 +1,7 @@
 import logging
 
 from app.db.start.init_langs import init_languages
-from app.db.start.common import importer_cls
+from app.db.start.import_version import importer_cls
 from app.db.start.rules import *
 from app.db.start.reverse_version import ReverseData
 
@@ -18,7 +18,7 @@ def main() -> None:
     bibles = [
         {
             "lang" : "mg", 
-            "version" : "MG1886", 
+            "version" : "MG_1886", 
             "src_type": "standard_json",
             "encoding" : "utf-8", 
             "validation_rules" : STANDARD_RULES # customize
@@ -33,9 +33,9 @@ def main() -> None:
         },
         {
             "lang" : "mg", 
-            "version" : "BMG",          
+            "version" : "BMG_1865",          
             "src_type": "bicaso",
-            "file_name": "BMG - Baiboly Malagasy 1865.zip",              
+            "file_name": "BMG_1865 - Baiboly Malagasy 1865.zip",              
             "src_type": "bicaso",
             "encoding" : "utf-8-sig",
             "validation_rules" : STANDARD_RULES # customize
@@ -56,14 +56,6 @@ def main() -> None:
             "encoding" : "utf-8-sig", 
             "validation_rules" : STANDARD_RULES
         },
-        # { 
-        #     "lang" : "fr", 
-        #     "version" : "LSG_1910", 
-        #     "src_type": "bicaso",
-        #     "file_name": "LSG_1910 - Bible Louis Second 1910.zip",
-        #     "encoding" : "utf-8-sig", 
-        #     "validation_rules" : STANDARD_RULES
-        # }, # ValueError: invalid literal for int() with base 10: '12b', common.py", line 288, in import_data 
         { 
             "lang" : "mg", 
             "version" : "BKM", 
@@ -72,21 +64,29 @@ def main() -> None:
             "file_name": "BKM - Baiboly Katolika Malagasy.zip",
             "validation_rules" : DIEM_RULES # change rules
         }, 
+        { 
+            "lang" : "en", 
+            "version" : "ASV_1901", 
+            "src_type": "bicaso",
+            "encoding" : "utf-8-sig", 
+            "file_name": "ASV_1901 - American Standard Version.zip",
+            "validation_rules" : STANDARD_RULES # change rules
+        }, 
+        # { 
+        #     "lang" : "fr", 
+        #     "version" : "LSG_1910", 
+        #     "src_type": "bicaso",
+        #     "file_name": "LSG_1910 - Bible Louis Second 1910.zip",
+        #     "encoding" : "utf-8-sig", 
+        #     "validation_rules" : STANDARD_RULES
+        # }, # ValueError: invalid literal for int() with base 10: '12b', common.py", line 288, in import_data 
     ]          
     
     for b in bibles:        
         importer = importer_cls(**b)
-        importer.run_import() # validate=False
-    
-    # old import
-    # importer = ImportMgBible(lang='mg', version="MG1886", file_encoding="utf-8")
-    # importer.run_import()
-    
-    # # reverse existing data from db to uniformize format across all imports    
-    # ReverseData().run("MG1886")    
-    
-    logger.info("Init done !")
+        importer.run_import() # validate=False    
 
+    logger.info("Init done !")
 
 if __name__ == "__main__":
     main()

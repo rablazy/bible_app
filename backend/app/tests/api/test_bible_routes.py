@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 pytest.BASE_URL = "bible"
 
-MG_VERSION = "MG1886"
+MG_VERSION = "BMG_1886"
 
 def test_main(client):
     response = client.get("/")

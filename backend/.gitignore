@@ -9,7 +9,9 @@ coverage.xml
 choirapp.db
 log.txt
 
-utils
+utils/
+reverse/
+original/
 
 # macOS
 .DS_Store
