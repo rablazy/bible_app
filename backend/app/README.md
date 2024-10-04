@@ -85,8 +85,8 @@ e.g ./reverse.sh kjv
 ## Deploy
 
 ```bash
-$ docker build -t . 
-$ docker run -p 8001:8001 <image_name>
+$ docker build -t <image_name> .
+$ docker run -p 8001:8001 --name <container_name> <image_name>
 ```
 
 ## API Reference

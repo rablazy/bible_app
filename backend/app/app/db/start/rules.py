@@ -11,6 +11,7 @@ STANDARD_RULES = {
     RulesEnum.BOOK_CHAPTER_COUNT: [27, 12], # DAN 12 chapters        
     RulesEnum.VERSE_COUNT: [28, 4, 19], # HOS 4 - 19 verses       
     RulesEnum.VERSE_COUNT: [49, 6, 24], # EFE  6 - 24 verses
+    RulesEnum.ALL_VERSE_PRESENT : []
     
     # check subtitle for mg1886
 }

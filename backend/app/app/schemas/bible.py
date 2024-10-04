@@ -22,7 +22,7 @@ class BibleItem(BaseModel):
     
     # id: int
     version: str
-    year: Optional[date] = None
+    year: Optional[int] = None
     src: str = None
     description: str = None
     src_url: Optional[str] = None

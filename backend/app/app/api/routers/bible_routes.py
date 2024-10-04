@@ -92,7 +92,8 @@ def search_verses(
         to_chapter = from_chapter    
         
     if from_book == to_book and to_chapter < from_chapter:
-        raise ValueError(f"<to_chapter> param should be greater than <from_chapter>")     
+        raise HTTPException(status_code=400, 
+                            detail=f"<to_chapter> param should be greater than <from_chapter>")        
     
     qf = crud.verse.query_by_version(db, version)
         

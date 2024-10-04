@@ -28,7 +28,7 @@ class ReverseData:
         b_item.books = [BookItem.model_validate(book) for book in books]        
         
         path = os.path.join(ROOT, 'data', 'bible', 'reverse', bible.lang.code)
-        file_name = os.path.join(path, (f'{version}.json').upper())
+        file_name = os.path.join(path, f'{version.upper()}.json')
         abort = False
         try:
             os.mkdir( path, 0o755 );
@@ -45,10 +45,12 @@ class ReverseData:
         
         
 
-if __name__ == "__main__":    
-    if sys.argv and len(sys.argv) > 1:                
+if __name__ == "__main__":        
+    if sys.argv and len(sys.argv) > 1:                               
         version = sys.argv[1]        
         if version:            
             ReverseData().run(version)
-    else:
-        logger.error("Give <version> string as param to the script")
+        else:
+            logger.error("Give <version> string as param to the script")
+    
+        

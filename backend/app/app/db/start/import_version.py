@@ -7,7 +7,7 @@ import tempfile
 
 from pydash import omit
 from zipfile import ZipFile
-from pydantic import create_model
+from sqlalchemy import or_, null
 
 from app import crud
 from app.models.bible import *
@@ -33,6 +33,7 @@ class RulesEnum(enum.Enum):
     BOOK_CHAPTER_COUNT = "book_chapter_count"
     VERSE_COUNT = "count_verse"
     VERSE_TEXT = "verse_text"
+    ALL_VERSE_PRESENT = "all_verse_present"
 
 
 class BibleValidator:
@@ -80,6 +81,13 @@ class BibleValidator:
                 Verse.rank == verse_rank
             ).first()         
         assert(v is not None and v.content == expected)
+        
+    def all_verse_present(self):
+        assert(self._q_verse().filter(or_(
+            Verse.content.ilike('???'),
+            Verse.content == '',
+            Verse.content == null()
+            )).count() == 0)
         
     def _q_book(self):        
         return self.db.query(Book).filter(*self.version_filter)
@@ -131,6 +139,26 @@ class BibleImporter:
         self.file_name = kwargs.get('file_name', None) 
         self.file_encoding = kwargs.get('encoding', "UTF-8")               
         self.file_type = None
+        
+        self.book_codes = {
+            1: 'gen_', 2: 'exo_', 3: 'lev_', 4: 'num_', 
+            5: 'deu_', 6: 'josh_', 7: 'jud_', 8: 'rut_', 
+            9: '1sam_', 10: '2sam_', 11: '1kin_', 12: '2kin_', 
+            13: '1chr_', 14: '2chr_', 15: 'ezr_', 16: 'neh_', 
+            17: 'est_', 18: 'job_', 19: 'psa_', 20: 'pro_', 
+            21: 'ecc_', 22: 'song_', 23: 'isa_', 24: 'jer_', 
+            25: 'lam_', 26: 'eze_', 27: 'dan_', 28: 'hos_', 
+            29: 'joe_', 30: 'amos_', 31: 'oba_', 32: 'jon_', 
+            33: 'mic_', 34: 'nah_', 35: 'hab_', 36: 'zep_', 
+            37: 'hag_', 38: 'zec_', 39: 'mal_', 40: 'mat_', 
+            41: 'mar_', 42: 'luk_', 43: 'joh_', 44: 'act_', 
+            45: 'rom_', 46: '1cor_', 47: '2cor_', 48: 'gal_', 
+            49: 'eph_', 50: 'phi_', 51: 'col_', 52: '1the_', 
+            53: '2the_', 54: '1tim_', 55: '2tim_', 56: 'tit_', 
+            57: 'phl_', 58: 'heb_', 59: 'jam_', 60: '1pet_', 
+            61: '2pet_', 62: '1joh_', 63: '2joh_', 64: '3joh_', 
+            65: 'jude_', 66: 'rev_'
+        }
 
 
     def import_version(self, bible_item: BibleItem):
@@ -150,11 +178,14 @@ class BibleImporter:
             for b in books:                
                 book = Book(**(omit(b.__dict__, "chapters", "chapter_count"))) 
                 if not book.short_name: 
-                    if book.name[0].isdigit() or book.name.startswith("I") or book.name.startswith("II"):
+                    if book.name[0].isdigit() or book.name.startswith("1") or book.name.startswith("2"):
                         book.short_name = book.name[:5]  
                     else:
-                        book.short_name = book.name[:3]              
+                        book.short_name = book.name[:3]     
+                book.short_name = book.short_name.capitalize()         
                 book.category = BookTypeEnum(b.category)
+                if self.book_codes.get(book.rank, None):
+                    book.code = self.book_codes.get(book.rank)
                 book.bible_id = bible.id
                 crud.book.create(self.db, book)
 
@@ -256,15 +287,17 @@ class BicasoBible(BibleImporter):
             entries = list(csv.reader(open(chap_file, 'r'), delimiter='\t')) 
         
             books = dict()      
-            for i, entry in enumerate(entries):                                      
+            for i, entry in enumerate(entries): 
+                rank = i + 1                                     
                 b = BookItem(
-                    rank = i + 1,
-                    name =((entry[0].split('-'))[1]).strip(),                                                             
-                    code = entry[3],                           
+                    rank = rank,
+                    name =((entry[0].split('-'))[1]).strip(),                                                                                 
                     classification = entry[4].strip(), 
                     chapter_count = int(entry[2]),                      
                 )
                 # b.short_name = b.name[:5] if b.name[0].isdigit() else b.name[:3]
+                if self.book_codes.get(rank, None):
+                    b.code = self.book_codes.get(rank)
                 b.chapters = [ChapterItem(rank=0)] * (b.chapter_count)
                 
                 if b.rank < 40 :
@@ -290,8 +323,11 @@ class BicasoBible(BibleImporter):
                         if content and content.startswith("["):
                             x = content.rfind(']')
                             if x :
-                                subtitle = content[0:x+1]
-                                content = content[x+1:].strip()              
+                                may_subtitle = content[0:x+1]
+                                may_content = content[x+1:].strip()   
+                                if may_content:
+                                    content = may_content
+                                    subtitle = may_subtitle           
                         book = books.get(book_code) 
                         chap_index = chapter_rank - 1                       
                         if book.chapters[chap_index].rank == 0:
