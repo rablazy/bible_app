@@ -121,3 +121,26 @@ def search_verses(
         return {"results": []}
       
     
+@router.delete("/delete/id/{id}")
+def delete_bible_by_id(
+    id: int, 
+    db: Session = Depends(deps.get_db)
+):
+    bible = crud.bible.get(db, id)
+    # TODO delete routine
+    if not bible:
+        raise HTTPException(status_code=404,
+                            detail=f"Bible with id {id} not found")
+    return {"msg":"Successfully deleted."}
+
+
+@router.delete("/delete/version/{version}")
+def delete_bible_by_version(
+    version: str, 
+    db: Session = Depends(deps.get_db)
+):
+    bible = crud.bible.query_by_version(db, version).first()
+    if not bible:
+        raise HTTPException(status_code=404,
+                            detail=f"Bible with version {version} not found")
+    return {"msg":"Successfully deleted."}

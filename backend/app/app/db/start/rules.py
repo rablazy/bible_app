@@ -35,7 +35,8 @@ DIEM_RULES = {
     RulesEnum.BOOK_CHAPTER_COUNT: [14, 36],  # 2 Tantara
     RulesEnum.BOOK_CHAPTER_COUNT: [66, 22],  # Apokalypsy
     RulesEnum.BOOK_CHAPTER_COUNT: [72, 19],  # Baroka
-    RulesEnum.VERSE_COUNT: [42, 8, 56]  # Lioka 8.    
+    RulesEnum.VERSE_COUNT: [42, 8, 56],  # Lioka 8.  
+    RulesEnum.ALL_VERSE_PRESENT : []
 }
 
 

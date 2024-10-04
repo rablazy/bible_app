@@ -22,7 +22,7 @@ def main() -> None:
             "src_type": "standard_json",
             "encoding" : "utf-8", 
             "validation_rules" : STANDARD_RULES # customize
-        }, 
+        }, # OK
         { 
             "lang" : "en", 
             "version" : "KJV", 
@@ -30,7 +30,7 @@ def main() -> None:
             "file_name": "KJV - King James Version Bible.zip",
             "encoding" : "utf-8-sig", 
             "validation_rules" : KJV_RULES
-        },
+        }, # OK
         # {
         #     "lang" : "mg", 
         #     "version" : "BMG_1865",          
@@ -48,14 +48,14 @@ def main() -> None:
         #     "encoding" : "utf-8-sig", 
         #     "validation_rules" : DIEM_RULES
         # },        
-        # { 
-        #     "lang" : "fr", 
-        #     "version" : "LSG_21", 
-        #     "src_type": "bicaso",
-        #     "file_name": "LSG_21 - Bible Louis Second 21eme siecle.zip",
-        #     "encoding" : "utf-8-sig", 
-        #     "validation_rules" : STANDARD_RULES
-        # },
+        { 
+            "lang" : "fr", 
+            "version" : "LSG_21", 
+            "src_type": "bicaso",
+            "file_name": "LSG_21 - Bible Louis Second 21eme siecle.zip",
+            "encoding" : "utf-8-sig", 
+            "validation_rules" : STANDARD_RULES
+        }, # OK
         # { 
         #     "lang" : "mg", 
         #     "version" : "BKM", 
@@ -63,16 +63,15 @@ def main() -> None:
         #     "encoding" : "utf-8-sig", 
         #     "file_name": "BKM - Baiboly Katolika Malagasy.zip",
         #     "validation_rules" : DIEM_RULES # change rules
-        # }, 
-        
-        # { 
-        #     "lang" : "en", 
-        #     "version" : "ASV_1901", 
-        #     "src_type": "bicaso",
-        #     "encoding" : "utf-8-sig", 
-        #     "file_name": "ASV_1901 - American Standard Version.zip",
-        #     "validation_rules" : STANDARD_RULES # change rules
-        # }, 
+        # },         
+        { 
+            "lang" : "en", 
+            "version" : "ASV_1901", 
+            "src_type": "bicaso",
+            "encoding" : "utf-8-sig", 
+            "file_name": "ASV_1901 - American Standard Version.zip",
+            "validation_rules" : STANDARD_RULES # change rules
+        }, # OK
         # { 
         #     "lang" : "fr", 
         #     "version" : "LSG_1910", 
