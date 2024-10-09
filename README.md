@@ -18,8 +18,7 @@ This is part of a bigger project to manage choir activities (scriptures, music m
 Also an opportunity to practice **FastAPI** and **SQLAlchemy**
 
 ## Build status
-
-![code coverage badge])
+![GitHub CI](https://github.com/rablazy/choir_app/actions/workflows/ci.yml/badge.svg)
 
 
 ## Tech / framework used
