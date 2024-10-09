@@ -4,15 +4,12 @@ Different versions of **Bible** are imported based on defined format, then acces
 You can import other version following the same format.
 
 Currently imported versions :
-- fr : 
+- fr :
     - Bible Louis Second 21 (LSG_21)
-- en : 
+- en :
     - King James Version (KJV)
     - American Standard Version (ASV_1901)
-- mg : 
-    - Baiboly Katolika Malagasy (BKM)
-    - Dikan-teny Iombonana eto Madagasikara (DIEM)
-    - Baiboly Malagasy 1865 (BMG_1865)
+- mg :
     - Baiboly Malagasy 1886 (BMG_1886)
 
 ## Motivation
@@ -35,7 +32,7 @@ Also an opportunity to practice **FastAPI** and **SQLAlchemy**
 
 ## Local Development
 
-Make sure you are in a virtual environment with Python >= 3.8. 
+Make sure you are in a virtual environment with Python >= 3.8.
 
 Then install poetry and project dependencies
 ```bash
@@ -91,7 +88,7 @@ $ docker run -p 8001:8001 --name <container_name> <image_name>
 
 ## API Reference
 
-- [ ] Detailed doc 
+- [ ] Detailed doc
 - [x] Default doc  `http://localhost:8001/docs`
 
 
