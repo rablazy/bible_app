@@ -44,6 +44,10 @@ class Chapter(Base):
     
     def __str__(self):
         return f"{self.book.short_name.capitalize()}. {self.rank}"
+    
+    @property
+    def book_rank(self):
+        return self.book.rank if self.book else None
         
 
 class Book(Base):    
@@ -80,7 +84,7 @@ class Verse(Base):
     
     @property
     def book_rank(self):
-        return self.chapter.book.rank    
+        return self.chapter.book.rank if (self.chapter and self.chapter.book) else None
     
     def __str__(self):
         return f"{self.chapter}.{self.rank}"
