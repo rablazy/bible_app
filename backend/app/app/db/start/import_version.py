@@ -135,15 +135,6 @@ def importer_cls(*args, **kwargs):
 
 
 class BibleImporter:
-    @classmethod
-    def get_instance(cls, src_type, *args, **kwargs):
-        if src_type == "standard_json":
-            return JsonBible(*args, **kwargs)
-        elif src_type == "bicaso":
-            return BicasoBible(*args, **kwargs)
-        else:
-            return BibleImporter(*args, **kwargs)
-
     def __init__(self, lang: str, version: str, validation_rules: dict = {}, **kwargs):
         self.db = SessionLocal()
         self.lang = lang
