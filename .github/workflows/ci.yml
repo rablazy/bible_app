@@ -27,6 +27,10 @@ jobs:
     - name: Install dependencies
       run: make install
 
+    - name: Set path
+      run: |
+        echo "PYTHONPATH=$PYTHONPATH:." >> $GITHUB_ENV
+
     - name: Init db
       run : make prestart
 
