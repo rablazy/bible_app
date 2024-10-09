@@ -24,11 +24,11 @@ jobs:
         virtualenvs-create: true
         virtualenvs-in-project: true
 
-    - name: Init db
-      run : bash prestart.sh
-
     - name: Install dependencies
       run: make install
+
+    - name: Init db
+      run : bash prestart.sh
 
     - name: Run tests
       run: make testcov
