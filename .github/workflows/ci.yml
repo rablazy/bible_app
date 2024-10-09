@@ -32,7 +32,7 @@ jobs:
         echo "PYTHONPATH=$PYTHONPATH:." >> $GITHUB_ENV
 
     - name: Init db
-      run : make prestart
+      run : make pretest
 
     - name: Run tests
       run: make testcov
