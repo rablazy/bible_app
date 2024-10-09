@@ -6,7 +6,7 @@ authors = ["Johny Blaze <blazeorjohny6@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8, <3.12"
+python = ">=3.9, <3.12"
 uvicorn = "^0.30.6"
 fastapi = "^0.115.0"
 SQLAlchemy = "~2.0"
@@ -24,6 +24,15 @@ pydash = "^8.0.3"
 [tool.poetry.dev-dependencies]
 pytest = "^8.3.3"
 
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.10.0"
+isort = "^5.13.2"
+flake8 = "^7.1.1"
+autoflake = "^2.3.1"
+
+[tool.isort]
+profile = "black"
 
 [build-system]
 requires = ["poetry-core"]

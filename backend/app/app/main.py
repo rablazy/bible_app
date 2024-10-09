@@ -1,13 +1,9 @@
 import time
 from pathlib import Path
 
-from fastapi import FastAPI, APIRouter, Request, Depends
-from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import crud
-from app.api import deps
 from app.api.main import api_router
 from app.core.config import settings
 
@@ -15,7 +11,7 @@ BASE_PATH = Path(__file__).resolve().parent
 # TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
 
 root_router = APIRouter()
-app = FastAPI(title="Choir API", openapi_url=f"{settings.API_V1_STR}/openapi.json")
+app = FastAPI(title="API", openapi_url=f"{settings.API_V1_STR}/openapi.json")
 
 # Set all CORS enabled origins
 if settings.BACKEND_CORS_ORIGINS:
@@ -30,14 +26,11 @@ if settings.BACKEND_CORS_ORIGINS:
 
 
 @root_router.get("/", status_code=200)
-def root(
-    request: Request
-) -> dict:
+def root(request: Request) -> dict:
     """
     Root GET
     """
-    return { "message" : "Hello Saimon !"}
-    
+    return {"message": "Hello Saimon !"}
 
 
 @app.middleware("http")

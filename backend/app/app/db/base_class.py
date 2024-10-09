@@ -7,6 +7,7 @@ from sqlalchemy.orm import as_declarative
 
 class_registry: t.Dict = {}
 
+
 @as_declarative(class_registry=class_registry)
 class Base:
     id: t.Any
@@ -16,4 +17,3 @@ class Base:
     @declared_attr
     def __tablename__(cls) -> str:
         return cls.__name__.lower()
-

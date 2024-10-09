@@ -1,9 +1,8 @@
 import pathlib
-
-from pydantic_settings import SettingsConfigDict, BaseSettings
-from pydantic import AnyHttpUrl, EmailStr, field_validator
 from typing import List, Optional, Union
 
+from pydantic import AnyHttpUrl, EmailStr, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Project Directories
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -28,7 +27,7 @@ class Settings(BaseSettings):
     # Origins that match this regex OR are in the above list are allowed
     BACKEND_CORS_ORIGIN_REGEX: Optional[
         str
-    ] = "https.*\.(netlify.app|herokuapp.com)"  # noqa: W605
+    ] = "https.*\.(vercel.app|netlify.app)"  # noqa: W605
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
@@ -38,7 +37,7 @@ class Settings(BaseSettings):
             return v
         raise ValueError(v)
 
-    SQLALCHEMY_DATABASE_URI: Optional[str] = "sqlite:///choirapp.db" #sqlite:///choirapp.db # postgres://
+    SQLALCHEMY_DATABASE_URI: Optional[str] = "sqlite:///app.db"  # postgres://
     FIRST_SUPERUSER: EmailStr = "admin@choir.mg"
     FIRST_SUPERUSER_PW: str = "adminch"
     model_config = SettingsConfigDict(case_sensitive=True)

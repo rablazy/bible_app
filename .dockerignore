@@ -5,8 +5,5 @@ venv
 env
 .dockerignore
 Dockerfile
-backend/Dockerfile
 frontend/
-choirapp.db
-backend/app/choirapp.db
-backend/app/app/utils/bicaso
+app.db

@@ -6,7 +6,8 @@ dist
 site
 .coverage*
 coverage.xml
-choirapp.db
+app.db
+app.db.old
 log.txt
 
 utils/

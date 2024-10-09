@@ -1,17 +1,15 @@
-from typing import Annotated, Any, Optional
+import logging
+from typing import Annotated, Optional
 
-from fastapi import Path
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
-from sqlalchemy.sql import or_, and_
+from sqlalchemy.sql import and_
 
 from app import crud
 from app.api import deps
+from app.models.bible import Bible, Book, BookTypeEnum, Chapter, Verse
+from app.schemas.bible import BibleItem, BookItemShort, ListItems, VerseItems
 
-from app.models.bible import Bible, Book, Chapter, Verse, BookTypeEnum
-from app.schemas.bible import BookItemShort, ChapterItem, ListItems, BibleItem, BookItem, VerseItem, VerseItems
-
-import logging
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
@@ -24,7 +22,7 @@ def search_bibles(
     lang: Optional[str] = None,
     version: Optional[str] = None,
     offset: Optional[int] = 0,
-    max_results: Optional[int] = 10
+    max_results: Optional[int] = 10,
 ) -> dict:
     """
     Search for bible(s)
@@ -35,21 +33,31 @@ def search_bibles(
     if version:
         filters.append(Bible.version.ilike(version))
     q = crud.bible.get_multi(db, filters=filters, query_only=True)
-    
+
     return {
-        "results": list(q.order_by(Bible.lang_id).offset(offset).limit(max_results).all()),
-        "count" : q.count()
+        "results": list(
+            q.order_by(Bible.lang_id).offset(offset).limit(max_results).all()
+        ),
+        "count": q.count(),
     }
 
 
-@router.get("/{version}/books/", status_code=200, response_model=ListItems[BookItemShort])
+@router.get(
+    "/{version}/books/", status_code=200, response_model=ListItems[BookItemShort]
+)
 def search_books(
     *,
     version: str,
     book_type: Optional[str] = Query(
-        "All", enum=[BookTypeEnum.OLD.value, BookTypeEnum.NEW.value, BookTypeEnum.APOCRYPHAL.value]),
+        "All",
+        enum=[
+            BookTypeEnum.OLD.value,
+            BookTypeEnum.NEW.value,
+            BookTypeEnum.APOCRYPHAL.value,
+        ],
+    ),
     short_name: Optional[str] = None,
-    offset : Optional[int] = 0,
+    offset: Optional[int] = 0,
     max_results: Optional[int] = 100,
     db: Session = Depends(deps.get_db),
 ) -> dict:
@@ -61,14 +69,18 @@ def search_books(
         filters.append(Book.category == book_type.upper())
     if short_name:
         filters.append(Book.short_name.ilike(short_name))
-    q = db.query(Book).join(Bible).filter(*filters)    
+    q = db.query(Book).join(Bible).filter(*filters)
     return {
-        "results": list(q.offset(offset).limit(max_results).all()), 
-        "count": q.count()
+        "results": list(q.offset(offset).limit(max_results).all()),
+        "count": q.count(),
     }
 
 
-@router.get("/{version}/verses/{from_book}/{from_chapter}", status_code=200, response_model=VerseItems)
+@router.get(
+    "/{version}/verses/{from_book}/{from_chapter}",
+    status_code=200,
+    response_model=VerseItems,
+)
 def search_verses(
     *,
     version: str,
@@ -78,69 +90,76 @@ def search_verses(
     to_book: Optional[int] = -1,
     to_chapter: Optional[int] = -1,
     to_verse: Optional[int] = -1,
-    offset : Optional[int] = 0,
+    offset: Optional[int] = 0,
     max_results: Optional[int] = 100,
     db: Session = Depends(deps.get_db),
 ) -> dict:
     if to_book == -1:
         to_book = from_book
-    
+
     if to_book < from_book:
-        raise ValueError(f"<to_book> param should be greater than <from_book>")
-    
+        raise HTTPException(
+            status_code=400,
+            detail="<to_book> param should be greater than <from_book>",
+        )
+
     if to_chapter == -1 and from_book == to_book:
-        to_chapter = from_chapter    
-        
+        to_chapter = from_chapter
+
     if from_book == to_book and to_chapter < from_chapter:
-        raise HTTPException(status_code=400, 
-                            detail=f"<to_chapter> param should be greater than <from_chapter>")        
-    
+        raise HTTPException(
+            status_code=400,
+            detail="<to_chapter> param should be greater than <from_chapter>",
+        )
+
     qf = crud.verse.query_by_version(db, version)
-        
-    start_verse = qf.filter(and_(Book.rank == from_book, 
-                                      Chapter.rank == from_chapter, Verse.rank == from_verse)).first()
-    if to_verse > 0:       
-        end_verse = qf.filter(and_(Book.rank == to_book, 
-                                   Chapter.rank == to_chapter, Verse.rank == to_verse)).first()      
-    else:          
+
+    start_verse = qf.filter(
+        and_(
+            Book.rank == from_book,
+            Chapter.rank == from_chapter,
+            Verse.rank == from_verse,
+        )
+    ).first()
+    if to_verse > 0:
+        end_verse = qf.filter(
+            and_(
+                Book.rank == to_book, Chapter.rank == to_chapter, Verse.rank == to_verse
+            )
+        ).first()
+    else:
         qf = qf.filter(Book.rank == to_book)
-        if to_chapter > -1 :
+        if to_chapter > -1:
             qf = qf.filter(Chapter.rank == to_chapter)
-        end_verse = qf.order_by(Verse.id.desc()).first()            
-   
+        end_verse = qf.order_by(Verse.id.desc()).first()
+
     if start_verse and end_verse:
         base_q = crud.verse.query_by_version(db, version)
-        q = base_q.filter(Verse.id >= start_verse.id, Verse.id <= end_verse.id)       
+        q = base_q.filter(Verse.id >= start_verse.id, Verse.id <= end_verse.id)
         return {
-            "results": list(q.offset(offset).limit(max_results).all()), 
+            "results": list(q.offset(offset).limit(max_results).all()),
             "count": q.count(),
-            "previous": base_q.filter(Verse.id == start_verse.id-1).first(),
-            "next": base_q.filter(Verse.id == end_verse.id+1).first()
+            "previous": base_q.filter(Verse.id == start_verse.id - 1).first(),
+            "next": base_q.filter(Verse.id == end_verse.id + 1).first(),
         }
     else:
         return {"results": []}
-      
-    
+
+
 @router.delete("/delete/id/{id}")
-def delete_bible_by_id(
-    id: int, 
-    db: Session = Depends(deps.get_db)
-):
+def delete_bible_by_id(id: int, db: Session = Depends(deps.get_db)):
     bible = crud.bible.get(db, id)
     # TODO delete routine
     if not bible:
-        raise HTTPException(status_code=404,
-                            detail=f"Bible with id {id} not found")
-    return {"msg":"Successfully deleted."}
+        raise HTTPException(status_code=404, detail=f"Bible with id {id} not found")
+    return {"msg": "Successfully deleted."}
 
 
 @router.delete("/delete/version/{version}")
-def delete_bible_by_version(
-    version: str, 
-    db: Session = Depends(deps.get_db)
-):
+def delete_bible_by_version(version: str, db: Session = Depends(deps.get_db)):
     bible = crud.bible.query_by_version(db, version).first()
     if not bible:
-        raise HTTPException(status_code=404,
-                            detail=f"Bible with version {version} not found")
-    return {"msg":"Successfully deleted."}
+        raise HTTPException(
+            status_code=404, detail=f"Bible with version {version} not found"
+        )
+    return {"msg": "Successfully deleted."}

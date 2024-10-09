@@ -16,42 +16,43 @@ class CRUD(Generic[ModelType]):
         """
         CRUD object with default methods to Create, Read, Update, Delete (CRUD).
         **Parameters**
-        * `model`: A SQLAlchemy model class       
+        * `model`: A SQLAlchemy model class
         """
         self.model = model
 
     def get(self, db: Session, id: Any) -> Optional[ModelType]:
         return db.query(self.model).filter(self.model.id == id).first()
-    
+
     def get_by_name(self, db: Session, name: str):
-        return db.query(self.model).filter(self.model.name==name).first()
-    
-    def get_multi(        
-        self, db: Session, *, skip: int = 0, limit: int = 5000, 
-        filters:Optional[List] = [],
+        return db.query(self.model).filter(self.model.name == name).first()
+
+    def get_multi(
+        self,
+        db: Session,
+        *,
+        skip: int = 0,
+        limit: int = 5000,
+        filters: Optional[List] = [],
         query_only: Optional[bool] = False
     ) -> List[ModelType]:
         q = db.query(self.model)
-        if filters:            
-            q = q.filter(*filters)        
+        if filters:
+            q = q.filter(*filters)
         # print(q)
         if query_only:
             return q
         else:
             return q.order_by(self.model.id).offset(skip).limit(limit).all()
-        
-        
-    
-    def create(self, db: Session, obj_in: ModelType) -> ModelType:        
+
+    def create(self, db: Session, obj_in: ModelType) -> ModelType:
         db.add(obj_in)
         db.commit()
         db.refresh(obj_in)
         return obj_in
-    
-    def create_multi(self, db:Session, objs : List[ModelType]):
+
+    def create_multi(self, db: Session, objs: List[ModelType]):
         db.add_all(objs)
         db.commit()
-
 
 
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):

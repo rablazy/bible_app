@@ -2,19 +2,21 @@ from typing import List
 
 import pytest
 
+
 class DictObj:
     """
     Convert dict to obj
     """
+
     def __init__(self, in_dict: dict):
         assert isinstance(in_dict, dict)
         for key, val in in_dict.items():
             if isinstance(val, (list, tuple)):
-                setattr(self, key, [DictObj(x) if isinstance(
-                    x, dict) else x for x in val])
+                setattr(
+                    self, key, [DictObj(x) if isinstance(x, dict) else x for x in val]
+                )
             else:
-                setattr(self, key, DictObj(val)
-                        if isinstance(val, dict) else val)
+                setattr(self, key, DictObj(val) if isinstance(val, dict) else val)
 
 
 def build_url(uri):
@@ -30,7 +32,7 @@ def build_url(uri):
 
 
 def get_url(client, uri, check_empty=True, to_dict=True):
-    url = build_url(uri)     
+    url = build_url(uri)
     response = client.get(url)
     return standard_check(response, check_empty, to_dict=to_dict)
 
@@ -42,5 +44,5 @@ def standard_check(response, check_empty=True, to_dict=True) -> dict[List]:
         assert len(data.get("results")) > 0
         print(data.keys())
     if to_dict:
-        data = DictObj(data)         
+        data = DictObj(data)
     return data

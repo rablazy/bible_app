@@ -3,9 +3,7 @@ FROM python:3.9.4
 # create the app user
 RUN addgroup --system app && adduser --system --group app
 
-WORKDIR /app/
-
-
+WORKDIR /app
 
 # https://docs.python.org/3/using/cmdline.html#envvar-PYTHONDONTWRITEBYTECODE
 # Prevents Python from writing .pyc files to disk
@@ -34,34 +32,27 @@ RUN pip install poetry
 # Copy poetry.lock* in case it doesn't exist in the repo
 COPY ./app/pyproject.toml ./app/poetry.lock* ./app/run.sh /app/
 
-
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Allow installing dev dependencies to run tests
 ARG INSTALL_DEV=false
 
+# Install dependencies
 RUN if [ $INSTALL_DEV ]; then \
       poetry install --with dev --no-root && rm -rf $POETRY_CACHE_DIR; \
     else \
       poetry install --only main --no-root && rm -rf $POETRY_CACHE_DIR; \
     fi
 
-
-# Install dependencies
-# RUN bash -c "if [ $INSTALL_DEV == 'true' ] ; then poetry install --no-root ; else poetry install --no-root --only main ; fi"
-
+# chown all the files to the app user
 COPY --chown=app:app ./app /app
 RUN chmod +x run.sh
 
 
 ENV PYTHONPATH=/app
 
-# chown all the files to the app user
-
-# RUN chown -R app:app $HOME
-
 # change to the app user
-# Switch to a non-root user, which is recommended by Heroku.
+# Switch to the non-root user.
 USER app
 
 # Run the run script, it will check for an /app/prestart.sh script (e.g. for migrations)
