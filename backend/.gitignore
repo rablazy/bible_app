@@ -14,5 +14,7 @@ utils/
 reverse/
 original/
 
+coverage_re
+
 # macOS
 .DS_Store
