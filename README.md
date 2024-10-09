@@ -1,4 +1,4 @@
-## MyBibleAPI
+## BibleAPI
 
 Different versions of **Bible** are imported based on defined format, then accessible via **API**.
 You can import other version following the same format.
