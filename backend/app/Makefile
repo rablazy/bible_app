@@ -16,6 +16,10 @@ setup_precommit:
 
 setup: initialize_git install activate setup_precommit
 
+prestart:
+	@echo "Init db"
+	poetry run bash ./prestart.sh
+
 test:
 	@echo "Running tests"
 	poetry run pytest

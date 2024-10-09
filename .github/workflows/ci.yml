@@ -27,11 +27,8 @@ jobs:
     - name: Install dependencies
       run: make install
 
-    - name: Enable env
-      run: make activate
-
     - name: Init db
-      run : bash prestart.sh
+      run : make prestart
 
     - name: Run tests
       run: make testcov
