@@ -15,7 +15,7 @@ Currently imported versions :
 ## Motivation
 
 This is part of a bigger project to manage choir activities (scriptures, music media, playlist, music sheets, events, ...) in my local community. <br>
-Also an opportunity to practice **FastAPI** and **SQLAlchemy**
+Also an opportunity to practice ***FastAPI*** and ***SQLAlchemy***
 
 ## Build status
 ![GitHub CI](https://github.com/rablazy/choir_app/actions/workflows/ci.yml/badge.svg)
@@ -31,7 +31,7 @@ Also an opportunity to practice **FastAPI** and **SQLAlchemy**
 
 ## Local Development
 
-Make sure you are in a virtual environment with Python >= 3.8.
+Make sure you are in a virtual environment with Python >= 3.9
 
 Then install poetry and project dependencies
 ```bash
@@ -52,11 +52,6 @@ $ chmod +x prestart.sh
 $ ./prestart.sh
 ```
 
-You can run local tests to check everything is ok
-```bash
-$ pytest
-```
-
 Local run with uvicorn in dev mode
 ```bash
 $ chmod +x dev.sh
@@ -65,20 +60,27 @@ $ ./dev.sh
 
 It will serve a simple API at `http://localhost:8001`
 
-Docs at `http://localhost:8001/docs`
+FastAPI docs at `http://localhost:8001/docs`
 
-To reverse engineering bible in existing db to json, use <ins></ind></in>*reverse.sh*</ins> script
+To reverse engineering existing bible in db to json, use <ins></ind></in>*reverse.sh*</ins> script
 
-Output will be saved by default in app/db/data/bible/reverse/lang/version.json
+Output file saved in app/export/bible/[lang]/[version].json
 
 ```bash
 $ cd backend/app
 $ chmod +x reverse.sh
-$ ./reverse.sh <version_name>
-e.g ./reverse.sh kjv
+$ ./reverse.sh
 ```
 
-## Deploy
+## Tests
+
+You can run tests with one of these commands
+```bash
+$ make test
+$ make testcov
+```
+
+## Run with docker
 
 ```bash
 $ docker build -t <image_name> .
@@ -90,17 +92,6 @@ $ docker run -p 8001:8001 --name <container_name> <image_name>
 - [ ] Detailed doc
 - [x] Default doc  `http://localhost:8001/docs`
 
-
-## Tests
-
-You can run tests to check everything is ok
-```bash
-$ pytest
-```
-
-## How to use?
-
-Coming soon
 
 ## Credits
 
