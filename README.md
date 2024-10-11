@@ -1,6 +1,7 @@
-## BibleAPI
+## ChoirApp
 
-Different versions of **Bible** are imported based on defined format, then accessible via **API**.
+<b>BibleAPI</b> is part of a project to manage choir activities (scriptures, music media, playlist, music sheets, events, ...) in my local community.<br/>
+Different versions of **Bible** are imported based on defined format, then accessible via API.
 You can import other version following the same format.
 
 Currently imported versions :
@@ -12,21 +13,17 @@ Currently imported versions :
 - mg :
     - Baiboly Malagasy 1886 (BMG_1886)
 
-## Motivation
 
-This is part of a bigger project to manage choir activities (scriptures, music media, playlist, music sheets, events, ...) in my local community. <br>
-Also an opportunity to practice ***FastAPI*** and ***SQLAlchemy***
-
-## Build status
-![GitHub CI](https://github.com/rablazy/choir_app/actions/workflows/ci.yml/badge.svg)
+## Status
+![GitHub CI](https://github.com/rablazy/choir_app/actions/workflows/ci.yml/badge.svg) &nbsp;&nbsp;
+[![codecov](https://codecov.io/github/rablazy/choir_app/graph/badge.svg?token=C904Q2B037)](https://codecov.io/github/rablazy/choir_app)
 
 
 ## Tech / framework used
 
-<b>Built with</b>
-- [Python](https://www.python.org/)
-- [FastAPI](https://fastapi.tiangolo.com/)
-- [SQLAlchemy](https://www.sqlalchemy.org/)
+[![python](https://img.shields.io/badge/Python-3.9-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)&nbsp;&nbsp;
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115.0-009688.svg?style=flat&logo=FastAPI&logoColor=white)](https://fastapi.tiangolo.com)&nbsp;&nbsp;
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-306998?logo=python&logoColor=white)](https://www.sqlachemy.org/)
 
 
 ## Local Development

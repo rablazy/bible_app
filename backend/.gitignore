@@ -15,6 +15,7 @@ reverse/
 original/
 
 coverage_re
+coverage.xml
 
 # macOS
 .DS_Store
