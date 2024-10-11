@@ -1,14 +1,14 @@
 import logging
 
+from sqlalchemy.sql import text
 from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
 
 from app.db.session import SessionLocal
-from sqlalchemy.sql import text
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-max_tries = 60 * 1  # 1 minutes
+max_tries = 30 * 1  # 30s
 wait_seconds = 1
 
 

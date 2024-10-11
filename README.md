@@ -93,8 +93,6 @@ $ docker run -p 8001:8001 --name <container_name> <image_name>
 ## Credits
 
 - Project template : <ins>https://github.com/ChristopherGS/ultimate-fastapi-tutorial</ins>
-- Bible versions :  <ins>https://www.bicaso.fr/Bible.html</ins>
-- MG1886 bible version : <ins>TOVOHERY Zafimanantsoa Pascal</ins>
 
 
 ## License
