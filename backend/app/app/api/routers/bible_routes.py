@@ -75,7 +75,7 @@ def search_books(
         filters.append(Book.code.icontains(code))
     q = db.query(Book).join(Bible).filter(*filters)
     return {
-        "results": list(q.offset(offset).limit(max_results).all()),
+        "results": list(q.order_by(Book.rank).offset(offset).limit(max_results).all()),
         "count": q.count(),
     }
 
@@ -142,7 +142,9 @@ def search_verses(
         base_q = crud.verse.query_by_version(db, version)
         q = base_q.filter(Verse.id >= start_verse.id, Verse.id <= end_verse.id)
         return {
-            "results": list(q.offset(offset).limit(max_results).all()),
+            "results": list(
+                q.order_by(Verse.id).offset(offset).limit(max_results).all()
+            ),
             "count": q.count(),
             "previous": base_q.filter(Verse.id == start_verse.id - 1).first(),
             "next": base_q.filter(Verse.id == end_verse.id + 1).first(),
