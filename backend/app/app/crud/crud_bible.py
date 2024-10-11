@@ -1,3 +1,4 @@
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from app.crud.base import CRUD
@@ -5,11 +6,15 @@ from app.models.bible import Bible, Book, Chapter, Language, Verse
 
 
 class CRUDLanguage(CRUD[Language]):
+    """Language model queries"""
+
     def get_by_code(self, db: Session, code: str):
         return db.query(self.model).filter(self.model.code == code).first()
 
 
 class CRUDBible(CRUD[Bible]):
+    """Bible model queries"""
+
     def query_by_version_and_lang(self, db: Session, version: str, lang: str):
         return (
             db.query(Bible)
@@ -18,7 +23,19 @@ class CRUDBible(CRUD[Bible]):
         )
 
     def query_by_version(self, db: Session, version: str):
+        """Search bible with version"""
         return db.query(Bible).filter(Bible.version.ilike(version))
+
+    def delete_by_id(self, db: Session, bible_id: int):
+        """Delete bible with all its content"""
+        obj = db.query(Bible).get(bible_id)
+        if obj:
+            stmt = delete(Book).where(Book.bible_id == obj.id)
+            db.execute(stmt)
+            db.delete(obj)
+            db.commit()
+        else:
+            raise ValueError(f"Bible with id {bible_id} not found")
 
 
 class CRUDBook(CRUD[Book]):

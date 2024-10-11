@@ -25,7 +25,7 @@ class BibleItem(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)  # extra='allow|ignore',
 
-    # id: int
+    id: Optional[int] = None
     version: str
     year: Optional[int] = None
     src: str = None

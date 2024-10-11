@@ -54,6 +54,12 @@ class CRUD(Generic[ModelType]):
         db.add_all(objs)
         db.commit()
 
+    def remove(self, db: Session, model_id: int) -> ModelType:
+        obj = db.query(self.model).get(model_id)
+        db.delete(obj)
+        db.commit()
+        return obj
+
 
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, model: Type[ModelType]):

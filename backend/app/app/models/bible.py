@@ -31,6 +31,7 @@ class Bible(Base):
     src_url = Column(String(1024))
     lang_id = Column(Integer, ForeignKey("language.id"))
     lang = relationship("Language")
+    # books = relationship("Book", back_populates="bible", cascade="all, delete")
 
 
 class Chapter(Base):
@@ -38,9 +39,11 @@ class Chapter(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     rank = Column(Integer, nullable=False)
-    book_id = Column(Integer, ForeignKey("book.id"))
+    book_id = Column(Integer, ForeignKey("book.id", ondelete="cascade"), nullable=False)
     book = relationship("Book", back_populates="chapters")
-    verses: Mapped[List["Verse"]] = relationship(back_populates="chapter")
+    verses: Mapped[List["Verse"]] = relationship(
+        back_populates="chapter", cascade="all, delete", passive_deletes=True
+    )
 
     def __str__(self):
         return f"{self.book.short_name.capitalize()}. {self.rank}"
@@ -58,9 +61,13 @@ class Book(Base):
     rank = Column(Integer, nullable=False)
     classification = Column(String(256))
     category = Column(Enum(BookTypeEnum, nullable=False))
-    bible_id = Column(Integer, ForeignKey("bible.id"))
-    bible = relationship("Bible")
-    chapters: Mapped[List["Chapter"]] = relationship(back_populates="book")
+    bible_id = Column(
+        Integer, ForeignKey("bible.id", ondelete="cascade"), nullable=False
+    )
+    bible = relationship("Bible")  # back_populates="books"
+    chapters: Mapped[List["Chapter"]] = relationship(
+        back_populates="book", cascade="all, delete", passive_deletes=True
+    )
     chapter_count = column_property(
         select(func.count(Chapter.book_id))
         .filter(Chapter.book_id == id)
@@ -77,7 +84,9 @@ class Verse(Base):
     subtitle = Column(String(1024), nullable=True)
     content = Column(String(4096), nullable=False)
     rank = Column(Integer, nullable=False)
-    chapter_id = Column(Integer, ForeignKey("chapter.id"))
+    chapter_id = Column(
+        Integer, ForeignKey("chapter.id", ondelete="cascade"), nullable=False
+    )
     chapter = relationship("Chapter", back_populates="verses")
 
     @property

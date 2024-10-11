@@ -2,8 +2,9 @@ import logging
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
-from sqlalchemy.sql import and_
+from sqlalchemy.sql import and_, or_
 
 from app import crud
 from app.api import deps
@@ -97,6 +98,7 @@ def search_verses(
     max_results: Optional[int] = 100,
     db: Session = Depends(deps.get_db),
 ) -> dict:
+    """Load on verse or multiple verses across chapters"""
     if to_book is None:
         to_book = from_book
 
@@ -149,20 +151,47 @@ def search_verses(
         return {"results": []}
 
 
+@router.get(
+    "/{version}/search/{text}",
+    status_code=200,
+    response_model=VerseItems,
+)
+def search_text(
+    *,
+    version: str,
+    text: str,
+    offset: Optional[int] = 0,
+    max_results: Optional[int] = 100,
+    db: Session = Depends(deps.get_db),
+):
+    """Search for text in verses"""
+    base_q = crud.verse.query_by_version(db, version)
+    q = base_q.filter(
+        or_(Verse.content.icontains(text), Verse.subtitle.icontains(text))
+    )
+    return {
+        "results": list(q.offset(offset).limit(max_results).all()),
+        "count": q.count(),
+    }
+
+
 @router.delete("/delete/id/{id}")
 def delete_bible_by_id(id: int, db: Session = Depends(deps.get_db)):
-    bible = crud.bible.get(db, id)
-    # TODO delete routine
-    if not bible:
+    """Delete bible by id"""
+    try:
+        crud.bible.delete_by_id(db, id)
+        return {"msg": "Successfully deleted."}
+    except ValueError:
         raise HTTPException(status_code=404, detail=f"Bible with id {id} not found")
-    return {"msg": "Successfully deleted."}
 
 
 @router.delete("/delete/version/{version}")
 def delete_bible_by_version(version: str, db: Session = Depends(deps.get_db)):
+    """Delete bible by version name"""
     bible = crud.bible.query_by_version(db, version).first()
     if not bible:
         raise HTTPException(
-            status_code=404, detail=f"Bible with version {version} not found"
+            status_code=404, detail=f"Bible version {version} not found"
         )
+    crud.bible.delete_by_id(db, bible.id)
     return {"msg": "Successfully deleted."}

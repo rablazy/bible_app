@@ -1,8 +1,8 @@
-"""add bible tables
+"""schema create
 
-Revision ID: 532bbae842dd
+Revision ID: e18d656d73d5
 Revises: 
-Create Date: 2024-09-30 21:49:02.447468
+Create Date: 2024-10-11 19:25:56.966807
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '532bbae842dd'
+revision: str = 'e18d656d73d5'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -48,11 +48,12 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=120), nullable=True),
     sa.Column('short_name', sa.String(length=10), nullable=True),
+    sa.Column('code', sa.String(length=10), nullable=True),
     sa.Column('rank', sa.Integer(), nullable=False),
     sa.Column('classification', sa.String(length=256), nullable=True),
     sa.Column('category', sa.Enum('OLD', 'NEW', 'APOCRYPHAL', name='booktypeenum'), nullable=True),
-    sa.Column('bible_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['bible_id'], ['bible.id'], ),
+    sa.Column('bible_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['bible_id'], ['bible.id'], ondelete='cascade'),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('book', schema=None) as batch_op:
@@ -61,8 +62,8 @@ def upgrade() -> None:
     op.create_table('chapter',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('rank', sa.Integer(), nullable=False),
-    sa.Column('book_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['book_id'], ['book.id'], ),
+    sa.Column('book_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['book_id'], ['book.id'], ondelete='cascade'),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('chapter', schema=None) as batch_op:
@@ -73,8 +74,8 @@ def upgrade() -> None:
     sa.Column('subtitle', sa.String(length=1024), nullable=True),
     sa.Column('content', sa.String(length=4096), nullable=False),
     sa.Column('rank', sa.Integer(), nullable=False),
-    sa.Column('chapter_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['chapter_id'], ['chapter.id'], ),
+    sa.Column('chapter_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['chapter_id'], ['chapter.id'], ondelete='cascade'),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('verse', schema=None) as batch_op:
