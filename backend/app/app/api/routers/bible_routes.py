@@ -56,7 +56,8 @@ def search_books(
             BookTypeEnum.APOCRYPHAL.value,
         ],
     ),
-    short_name: Optional[str] = None,
+    name: Optional[str] = None,
+    code: Optional[str] = None,
     offset: Optional[int] = 0,
     max_results: Optional[int] = 100,
     db: Session = Depends(deps.get_db),
@@ -67,8 +68,10 @@ def search_books(
     filters = [Bible.version.ilike(version)]
     if book_type != "All":
         filters.append(Book.category == book_type.upper())
-    if short_name:
-        filters.append(Book.short_name.ilike(short_name))
+    if name:
+        filters.append(Book.name.icontains(name))
+    if code:
+        filters.append(Book.code.icontains(code))
     q = db.query(Book).join(Bible).filter(*filters)
     return {
         "results": list(q.offset(offset).limit(max_results).all()),
@@ -87,14 +90,14 @@ def search_verses(
     from_book: Annotated[int, Path(ge=1)],
     from_chapter: Annotated[int, Path(ge=1)],
     from_verse: Optional[int] = 1,
-    to_book: Optional[int] = -1,
-    to_chapter: Optional[int] = -1,
-    to_verse: Optional[int] = -1,
+    to_book: Optional[int] = None,
+    to_chapter: Optional[int] = None,
+    to_verse: Optional[int] = None,
     offset: Optional[int] = 0,
     max_results: Optional[int] = 100,
     db: Session = Depends(deps.get_db),
 ) -> dict:
-    if to_book == -1:
+    if to_book is None:
         to_book = from_book
 
     if to_book < from_book:
@@ -103,7 +106,7 @@ def search_verses(
             detail="<to_book> param should be greater than <from_book>",
         )
 
-    if to_chapter == -1 and from_book == to_book:
+    if to_chapter is None and from_book == to_book:
         to_chapter = from_chapter
 
     if from_book == to_book and to_chapter < from_chapter:
@@ -121,7 +124,7 @@ def search_verses(
             Verse.rank == from_verse,
         )
     ).first()
-    if to_verse > 0:
+    if to_verse is not None and to_verse > 0:
         end_verse = qf.filter(
             and_(
                 Book.rank == to_book, Chapter.rank == to_chapter, Verse.rank == to_verse
@@ -129,7 +132,7 @@ def search_verses(
         ).first()
     else:
         qf = qf.filter(Book.rank == to_book)
-        if to_chapter > -1:
+        if to_chapter is not None and to_chapter > 0:
             qf = qf.filter(Chapter.rank == to_chapter)
         end_verse = qf.order_by(Verse.id.desc()).first()
 
