@@ -47,15 +47,18 @@ class BibleValidator:
         self.version_filter = [Book.bible_id == self.bible_id]
 
     def run(self):
+        """Validate this version by running all defined rules"""
         if self.rules:
             for rule in self.rules:
                 logger.debug("Checking rule %s", rule)
                 getattr(self, rule[0].value)(*rule[1])
 
     def book_count(self, expected):
+        """Checks numbers of book in this version"""
         assert self._q_book().count() == expected
 
     def boot_count_by_category(self, category, expected):
+        """Compare book count by category to expected"""
         assert self._q_book().filter(Book.category == category).count() == expected
 
     def book_category(self, rank, expected):
@@ -68,12 +71,14 @@ class BibleValidator:
         assert self._q_book().filter(Book.rank == rank).first().category == expected
 
     def book_chapter_count(self, book_rank, expected_chapter_count):
+        """Check number of chapters in a book"""
         assert (
             self._q_chapter().filter(Book.rank == book_rank).count()
             == expected_chapter_count
         )
 
     def count_verse(self, book_rank, chapter_rank, expected):
+        """Compare numbers of verses in chapter to expected"""
         assert (
             self._q_verse()
             .filter(Book.rank == book_rank, Chapter.rank == chapter_rank)
@@ -82,6 +87,7 @@ class BibleValidator:
         )
 
     def verse_text(self, book_rank, chapter_rank, verse_rank, expected):
+        """Check if verse content is as excepted"""
         v = (
             self._q_verse()
             .filter(
@@ -94,6 +100,7 @@ class BibleValidator:
         assert v is not None and v.content == expected
 
     def all_verse_present(self):
+        """Check if all verses are not empty"""
         assert (
             self._q_verse()
             .filter(
@@ -123,6 +130,7 @@ class BibleValidator:
 
 
 def importer_cls(*args, **kwargs):
+    """Bible importer factory"""
     src_type = kwargs.get("src_type", None)
     if src_type == "standard_json":
         return JsonBible(*args, **kwargs)
@@ -131,6 +139,8 @@ def importer_cls(*args, **kwargs):
 
 
 class BibleImporter:
+    """Main class to import bible version"""
+
     def __init__(self, lang: str, version: str, validation_rules: dict = {}, **kwargs):
         self.db = SessionLocal()
         self.lang = lang

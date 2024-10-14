@@ -9,7 +9,7 @@ from app.main import app
 
 def pytest_configure():
     pytest.BASE_URL = ""  # global variable to override in each test file
-    pytest.MAIN_URL = settings.API_V1_STR
+    pytest.MAIN_URL = settings.API_VERSION
 
 
 @pytest.fixture()

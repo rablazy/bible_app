@@ -5,6 +5,7 @@ htmlcov
 dist
 site
 .coverage*
+.env
 coverage.xml
 app.db
 app.db.old

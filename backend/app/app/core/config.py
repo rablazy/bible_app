@@ -1,7 +1,8 @@
 import pathlib
 from typing import List, Optional, Union
 
-from pydantic import AnyHttpUrl, EmailStr, field_validator
+from pydantic import AnyHttpUrl, PostgresDsn, field_validator
+from pydantic.types import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Project Directories
@@ -9,12 +10,17 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
-    API_V1_STR: str = "/api/v1"
-    JWT_SECRET: str = "TEST_SECRET_DO_NOT_USE_IN_PROD"
-    ALGORITHM: str = "HS256"
+    """Pydantic settings for FASTAPI"""
 
-    # 60 minutes * 24 hours * 8 days = 8 days
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
+    API_TITLE: str = "choir_api"
+    API_VERSION: str = "/api/v1"
+
+    DRIVER_NAME: str = ""
+    DB_USER: str = ""
+    DB_PASSWORD: SecretStr = SecretStr("")
+    DB_HOST: str = ""
+    DB_NAME: str = ""
+    DB_PORT: int = 0
 
     # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
     # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
@@ -30,6 +36,7 @@ class Settings(BaseSettings):
     ] = "https.*\.(vercel.app|netlify.app)"  # noqa: W605
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
@@ -37,12 +44,15 @@ class Settings(BaseSettings):
             return v
         raise ValueError(v)
 
-    SQLALCHEMY_DATABASE_URI: Optional[
-        str
-    ] = "postgresql://adminchoirmg:adminch@localhost:5433/choir_app"  # postgres:// # sqlite:///app.db
-    FIRST_SUPERUSER: EmailStr = "admin@choir.mg"
-    FIRST_SUPERUSER_PW: str = "adminch"
-    model_config = SettingsConfigDict(case_sensitive=True)
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
+    )
+
+    @property
+    def pg_database_url(self) -> PostgresDsn:
+        # print(settings.model_dump())
+        """Create a valid Postgres database url."""
+        return f"{self.DRIVER_NAME}://{self.DB_USER}:{self.DB_PASSWORD.get_secret_value()}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
 
 settings = Settings()

@@ -11,7 +11,9 @@ BASE_PATH = Path(__file__).resolve().parent
 # TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
 
 root_router = APIRouter()
-app = FastAPI(title="API", openapi_url=f"{settings.API_V1_STR}/openapi.json")
+app = FastAPI(
+    title=f"{settings.API_TITLE}", openapi_url=f"{settings.API_VERSION}/openapi.json"
+)
 
 # Set all CORS enabled origins
 if settings.BACKEND_CORS_ORIGINS:
@@ -42,7 +44,7 @@ async def add_process_time_header(request: Request, call_next):
     return response
 
 
-app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(api_router, prefix=settings.API_VERSION)
 app.include_router(root_router)
 
 
