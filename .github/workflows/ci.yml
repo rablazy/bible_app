@@ -1,13 +1,28 @@
-name: Build file
+name: Tests
 
 on: [push, pull_request]
 
 jobs:
-  build:
+  tests:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./backend/app
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: pg#2401
+          POSTGRES_USER: postgres
+          POSTGRES_DB: ci_db_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
     - uses: actions/checkout@v4
@@ -31,6 +46,12 @@ jobs:
         echo "PYTHONPATH=$PYTHONPATH:." >> $GITHUB_ENV
 
     - name: Init test db
+      env:
+          POSTGRES_SERVER: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: pg#2401
+          POSTGRES_DB: ci_db_test
+          DATABASE_URL: "postgresql://postgres:pg#2401@postgres:5432/ci_db_test"
       run : make pretest
 
     - name: Run tests
