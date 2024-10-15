@@ -45,17 +45,14 @@ jobs:
       run: |
         echo "PYTHONPATH=$PYTHONPATH:." >> $GITHUB_ENV
 
-    - name: Init test db
+    - name: Run tests
       env:
           POSTGRES_SERVER: localhost
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: pg#2401
           POSTGRES_DB: ci_db_test
           DATABASE_URL: "postgresql://postgres:pg#2401@localhost:5432/ci_db_test"
-      run : make pretest
-
-    - name: Run tests
-      run: make testcov
+      run: make pretest && make testcov
 
     - name: Upload Coverage to Codecov
       uses: codecov/codecov-action@v4
