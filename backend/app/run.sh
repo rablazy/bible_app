@@ -17,4 +17,5 @@ export PORT=${PORT:-8001}
 # export BACKEND_CORS_ORIGINS=["http://localhost:3000","http://localhost:8000"]
 
 # run gunicorn
-exec gunicorn --bind $HOST:$PORT "$APP_MODULE" -k uvicorn.workers.UvicornWorker
+exec gunicorn --bind $HOST:$PORT "$APP_MODULE" -k uvicorn.workers.UvicornWorker --access-logfile '-'
+
