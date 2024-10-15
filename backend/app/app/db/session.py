@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
 engine = create_engine(
-    settings.pg_database_url,
+    settings.DATABASE_URL,  # pg_database_url
     # required for sqlite
     # connect_args={"check_same_thread": False},
 )

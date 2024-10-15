@@ -5,18 +5,18 @@ htmlcov
 dist
 site
 .coverage*
-.env
-coverage.xml
-app.db
-app.db.old
+coverage*
+.env*
+app.db*
 log.txt
 
 utils/
 reverse/
 original/
 
-coverage_re
-coverage.xml
+*.old
+
+docker-compose.local.yml
 
 # macOS
 .DS_Store

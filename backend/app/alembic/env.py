@@ -1,7 +1,6 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
@@ -13,7 +12,7 @@ config = context.config
 # This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
-    
+
 from app.core.config import settings
 from app.db.base import Base
 
@@ -28,8 +27,10 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+
 def get_url():
-    return settings.SQLALCHEMY_DATABASE_URI
+    return settings.DATABASE_URL
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -43,7 +44,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    #url = config.get_main_option("sqlalchemy.url")
+    # url = config.get_main_option("sqlalchemy.url")
     url = get_url()
     context.configure(
         url=url,
@@ -52,7 +53,7 @@ def run_migrations_offline() -> None:
         dialect_opts={"paramstyle": "named"},
         compare_type=True,
         # include_schemas=True,
-        render_as_batch=True
+        render_as_batch=True,
     )
 
     with context.begin_transaction():
@@ -76,11 +77,11 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, 
-            target_metadata=target_metadata, 
-            compare_type=True, 
+            connection=connection,
+            target_metadata=target_metadata,
+            compare_type=True,
             # include_schemas=True,
-            render_as_batch=True
+            render_as_batch=True,
         )
 
         with context.begin_transaction():

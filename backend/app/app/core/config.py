@@ -14,13 +14,7 @@ class Settings(BaseSettings):
 
     API_TITLE: str = "choir_api"
     API_VERSION: str = "/api/v1"
-
-    DRIVER_NAME: str = ""
-    DB_USER: str = ""
-    DB_PASSWORD: SecretStr = SecretStr("")
-    DB_HOST: str = ""
-    DB_NAME: str = ""
-    DB_PORT: int = 0
+    DATABASE_URL: str = ""
 
     # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
     # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
@@ -48,11 +42,6 @@ class Settings(BaseSettings):
         env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
     )
 
-    @property
-    def pg_database_url(self) -> PostgresDsn:
-        # print(settings.model_dump())
-        """Create a valid Postgres database url."""
-        return f"{self.DRIVER_NAME}://{self.DB_USER}:{self.DB_PASSWORD.get_secret_value()}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
-
 
 settings = Settings()
+print(settings.model_dump())

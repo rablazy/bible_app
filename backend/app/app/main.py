@@ -15,6 +15,16 @@ app = FastAPI(
     title=f"{settings.API_TITLE}", openapi_url=f"{settings.API_VERSION}/openapi.json"
 )
 
+# app = FastAPI(
+#     title=settings.title,
+#     version=settings.version,
+#     description=settings.description,
+#     openapi_prefix=settings.openapi_prefix,
+#     docs_url=settings.docs_url,
+#     openapi_url=settings.openapi_url
+# )
+
+
 # Set all CORS enabled origins
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
