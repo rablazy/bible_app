@@ -47,11 +47,11 @@ jobs:
 
     - name: Init test db
       env:
-          POSTGRES_SERVER: postgres
+          POSTGRES_SERVER: localhost
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: pg#2401
           POSTGRES_DB: ci_db_test
-          DATABASE_URL: "postgresql://postgres:pg#2401@postgres:5432/ci_db_test"
+          DATABASE_URL: "postgresql://postgres:pg#2401@localhost:5432/ci_db_test"
       run : make pretest
 
     - name: Run tests
