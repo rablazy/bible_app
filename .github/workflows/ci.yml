@@ -9,13 +9,15 @@ jobs:
       run:
         working-directory: ./backend/app
 
+    env:
+      POSTGRES_PASSWORD: pg#2401
+      POSTGRES_USER: root
+      POSTGRES_DB: ci_db_test
+      POSTGRES_SERVER: localhost
+
     services:
       postgres:
         image: postgres
-        env:
-          POSTGRES_PASSWORD: pg#2401
-          POSTGRES_USER: postgres
-          POSTGRES_DB: ci_db_test
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -47,11 +49,7 @@ jobs:
 
     - name: Run tests
       env:
-          POSTGRES_SERVER: localhost
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: pg#2401
-          POSTGRES_DB: ci_db_test
-          DATABASE_URL: "postgresql://postgres:pg#2401@localhost:5432/ci_db_test"
+        DATABASE_URL: postgresql://${{env.POSTGRES_USER}}:${{env.POSTGRES_PASSWORD}}@${{env.POSTGRES_SERVER}}:5432/${{env.POSTGRES_DB}}
       run: make pretest && make testcov
 
     - name: Upload Coverage to Codecov
