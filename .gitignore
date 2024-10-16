@@ -1,0 +1,21 @@
+__pycache__
+*.pyc
+.pytest_cache
+htmlcov
+dist
+site
+.coverage*
+coverage*
+.env*
+app.db*
+log.txt
+
+export/
+original/
+
+*.old
+
+docker-compose.local.yml
+
+# macOS
+.DS_Store
