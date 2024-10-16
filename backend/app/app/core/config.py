@@ -1,3 +1,4 @@
+import os
 import pathlib
 from typing import List, Optional, Union
 
@@ -42,6 +43,11 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
     )
+
+    @property
+    def db_url(self):
+        env = os.environ.get("ENVIRONMENT", "normal")
+        return self.DATABASE_TEST_URL if env == "test" else self.DATABASE_URL
 
 
 settings = Settings()

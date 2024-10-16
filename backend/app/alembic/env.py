@@ -30,8 +30,7 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    env = os.environ.get("ENVIRONMENT", "normal")
-    return settings.DATABASE_TEST_URL if env == "test" else settings.DATABASE_URL
+    return settings.db_url
 
 
 def run_migrations_offline() -> None:
