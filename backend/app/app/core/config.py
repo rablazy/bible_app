@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     API_TITLE: str = "choir_api"
     API_VERSION: str = "/api/v1"
     DATABASE_URL: str = ""
+    DATABASE_TEST_URL: str = ""
 
     # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
     # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
@@ -44,4 +45,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-print(settings.model_dump())

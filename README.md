@@ -40,12 +40,7 @@ $ poetry install
 The project is configured to use postgres.
 Configure your postgres db instance then add .env file in the project root:
 ```
-DRIVER_NAME="postgresql"
-DB_USER="adminchoirmg"
-DB_PASSWORD="adminch"
-DB_HOST="localhost"
-DB_NAME="choir_app"
-DB_PORT=5433
+DATABASE_URL = "postgresql://username:password@localhost:5432/db_name"
 ```
 
 Run the initial script which will run migrations and import initial data.

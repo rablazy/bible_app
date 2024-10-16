@@ -1,3 +1,4 @@
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
@@ -29,7 +30,8 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    return settings.DATABASE_URL
+    env = os.environ.get("ENVIRONMENT", "normal")
+    return settings.DATABASE_TEST_URL if env == "test" else settings.DATABASE_URL
 
 
 def run_migrations_offline() -> None:

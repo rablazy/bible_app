@@ -17,19 +17,19 @@ setup_precommit:
 setup: initialize_git install activate setup_precommit
 
 pretest:
-	@echo "Init db"
+	@echo "Init test db"
 	poetry run bash ./pretest.sh
 
-test:
+test: pretest
 	@echo "Running tests"
 	poetry run pytest
 
-testcov:
-	@echo "Generating test coverage"
+testcov: pretest
+	@echo "Running tests with generating test coverage xml"
 	poetry run pytest --cov --cov-report=xml
 
-testcov_re:
-	@echo "Generating test coverage report html"
+testcov_re: pretest
+	@echo "Running test with generating test coverage report html"
 	poetry run pytest --cov --cov-report=html:coverage_re
 
 format:

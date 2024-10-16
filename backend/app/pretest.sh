@@ -1,5 +1,8 @@
 #! /usr/bin/env bash
 
+export ENVIRONMENT="test"
+export PYTHONPATH=$PYTHONPATH:.
+
 # Let the DB start
 python ./app/db/db_check.py
 
