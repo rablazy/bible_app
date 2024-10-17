@@ -85,7 +85,7 @@ def search_books(
 
 
 @router.get(
-    "/{version}/verses/{from_book}/{from_chapter}",
+    "/{version}/verses/{from_book_code}/{from_chapter}",
     status_code=200,
     response_model=VerseItems,
 )
@@ -93,10 +93,10 @@ def search_verses(
     *,
     version: str,
     translate_versions: List[str] = Query(None),
-    from_book: Annotated[int, Path(ge=1)],
+    from_book_code: str,
     from_chapter: Annotated[int, Path(ge=1)],
     from_verse: Optional[int] = 1,
-    to_book: Optional[int] = None,
+    to_book_code: Optional[str] = None,
     to_chapter: Optional[int] = None,
     to_verse: Optional[int] = None,
     offset: Optional[int] = 0,
@@ -104,8 +104,22 @@ def search_verses(
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """Load on verse or multiple verses across chapters"""
-    if to_book is None:
+
+    start_book = (
+        db.query(Book).filter(Book.code.ilike(from_book_code)).first()
+        if from_book_code
+        else None
+    )
+    from_book = start_book.rank if start_book else -1
+
+    to_book = -1
+    if to_book_code is None:
+        to_book_code = from_book_code
         to_book = from_book
+
+    if not to_book_code == from_book_code:
+        dest_book = db.query(Book).filter(Book.code.ilike(to_book_code)).first()
+        to_book = dest_book.rank if dest_book else -1
 
     if to_book < from_book:
         raise HTTPException(
@@ -113,8 +127,8 @@ def search_verses(
             detail="<to_book> param should be greater than <from_book>",
         )
 
-    if to_chapter is None and from_book == to_book:
-        to_chapter = from_chapter
+    if to_chapter is None:
+        to_chapter = from_chapter if from_book == to_book else 1
 
     if from_book == to_book and to_chapter < from_chapter:
         raise HTTPException(
@@ -159,6 +173,7 @@ def search_verses(
             ).filter(Verse.code.in_(verse_codes))
             results.extend(extra_results)
 
+        results.sort(key=lambda x: x.code)
         return {
             "results": results,
             "count": count,
