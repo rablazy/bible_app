@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-export ENVIRONMENT="test"
+export TESTING=1
 
 # Let the DB start
 python ./app/db/db_check.py

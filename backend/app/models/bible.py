@@ -8,6 +8,10 @@ from app.db.base_class import Base
 
 
 class Language(Base):
+    """Language model
+    e.g : (fr, Français), (en, English), ..
+    """
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), unique=True)
     code = Column(String(5))
@@ -39,6 +43,7 @@ class Chapter(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     rank = Column(Integer, nullable=False)
+    code = Column(String, nullable=False)
     book_id = Column(Integer, ForeignKey("book.id", ondelete="cascade"), nullable=False)
     book = relationship("Book", back_populates="chapters")
     verses: Mapped[List["Verse"]] = relationship(
@@ -84,6 +89,7 @@ class Verse(Base):
     subtitle = Column(String(1024), nullable=True)
     content = Column(String(4096), nullable=False)
     rank = Column(Integer, nullable=False)
+    code = Column(String, nullable=False)
     chapter_id = Column(
         Integer, ForeignKey("chapter.id", ondelete="cascade"), nullable=False
     )
@@ -96,6 +102,18 @@ class Verse(Base):
     @property
     def book_rank(self):
         return self.chapter.book.rank if (self.chapter and self.chapter.book) else None
+
+    @property
+    def book_name(self):
+        return self.chapter.book.name if (self.chapter and self.chapter.book) else None
+
+    @property
+    def book_short_name(self):
+        return (
+            self.chapter.book.short_name
+            if (self.chapter and self.chapter.book)
+            else None
+        )
 
     def __str__(self):
         return f"{self.chapter}.{self.rank}"

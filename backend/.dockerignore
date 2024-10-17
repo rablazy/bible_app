@@ -7,3 +7,4 @@ env
 Dockerfile
 frontend/
 app.db
+.env*

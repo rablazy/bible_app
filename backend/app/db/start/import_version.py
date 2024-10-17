@@ -202,14 +202,40 @@ class BibleImporter:
                             **(omit(chap.__dict__, "book_rank", "verses"))
                         )  # "book_id",
                         chapter.book_id = book.id
+                        chapter.code = f"{book.code}.{chapter.rank}"
                         crud.chapter.create(self.db, chapter)
 
                         if chap.verses:
                             for v in chap.verses:
                                 verse = Verse(
-                                    **(omit(v.__dict__, "chapter_rank", "book_rank"))
+                                    **(
+                                        omit(
+                                            v.__dict__,
+                                            "chapter_rank",
+                                            "book_rank",
+                                            "book_name",
+                                            "book_short_name",
+                                        )
+                                    )
                                 )
+                                content = verse.content
+                                if content and content.startswith("["):
+                                    try:
+                                        x = content.index("]")
+                                        if x:
+                                            maybe_subtitle = content[0 : x + 1]  # 0,x+1
+                                            maybe_content = content[x + 1 :].strip()
+                                            if maybe_content:
+                                                verse.content = maybe_content
+                                                verse.subtitle = maybe_subtitle
+                                    except ValueError:
+                                        ...
                                 verse.chapter_id = chapter.id
+                                verse.code = "%s.%02d.%02d" % (
+                                    book.code,
+                                    chapter.rank,
+                                    verse.rank,
+                                )
                                 chapter.verses.append(verse)
 
             self.db.commit()

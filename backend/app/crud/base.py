@@ -20,6 +20,9 @@ class CRUD(Generic[ModelType]):
         """
         self.model = model
 
+    def base_query(self, db: Session):
+        return db.query(self.model)
+
     def get(self, db: Session, id: Any) -> Optional[ModelType]:
         return db.query(self.model).filter(self.model.id == id).first()
 

@@ -46,8 +46,9 @@ class Settings(BaseSettings):
 
     @property
     def db_url(self):
-        env = os.environ.get("ENVIRONMENT", "normal")
-        return self.DATABASE_TEST_URL if env == "test" else self.DATABASE_URL
+        env = os.environ.get("TESTING", 0)
+        return self.DATABASE_TEST_URL if env else self.DATABASE_URL
 
 
 settings = Settings()
+# print(settings.model_dump())

@@ -1,4 +1,4 @@
-from sqlalchemy import delete
+from sqlalchemy import delete, or_
 from sqlalchemy.orm import Session
 
 from app.crud.base import CRUD
@@ -47,7 +47,7 @@ class CRUDChapter(CRUD[Chapter]):
 
 
 class CRUDVerse(CRUD[Verse]):
-    def query_by_version(self, db: Session, version: str):
+    def query_by_version(self, db: Session, version):
         return (
             db.query(Verse)
             .join(Chapter)
@@ -55,6 +55,12 @@ class CRUDVerse(CRUD[Verse]):
             .join(Bible)
             .filter(Bible.version.ilike(version))
         )
+
+    def query_by_versions(self, db: Session, *versions):
+        q = db.query(Verse).join(Chapter).join(Book).join(Bible)
+        version_filter = [Bible.version.ilike(version) for version in versions]
+        q = q.filter(or_(*version_filter))
+        return q
 
 
 language = CRUDLanguage(Language)

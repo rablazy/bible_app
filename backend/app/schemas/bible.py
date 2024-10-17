@@ -10,6 +10,8 @@ class ListItems(BaseModel, Generic[DataT]):
 
     results: Sequence[DataT]
     count: int = 0
+    offset: int = 0
+    total: int = 0
 
 
 class LanguageItem(BaseModel):
@@ -60,6 +62,7 @@ class ChapterItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     # id : int
     rank: int
+    code: Optional[str] = None
     book_id: Optional[int] = None
     book_rank: Optional[int] = None
     verses: List["VerseItem"] = []
@@ -80,18 +83,19 @@ class VerseItem(BaseModel):
     subtitle: Optional[Union[str, int, bytes]] = None
     content: str
     rank: int
+    code: Optional[str] = None
     # chapter_id : int
     chapter_rank: Optional[int] = None
     book_rank: Optional[int] = None
+    book_name: Optional[str] = None
+    book_short_name: Optional[str] = None
 
 
-class VerseItems(BaseModel):
+class VerseItems(ListItems[VerseItem]):
     """Pydantic model for Verse list"""
 
-    results: Sequence[VerseItem]
     next: Optional[VerseItem] = None
     previous: Optional[VerseItem] = None
-    count: int = 0
 
 
 BibleItem.model_rebuild()

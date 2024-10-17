@@ -1,5 +1,5 @@
 import logging
-from typing import Annotated, Optional
+from typing import Annotated, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy import delete
@@ -34,12 +34,13 @@ def search_bibles(
     if version:
         filters.append(Bible.version.ilike(version))
     q = crud.bible.get_multi(db, filters=filters, query_only=True)
+    results = list(q.order_by(Bible.lang_id).offset(offset).limit(max_results).all())
 
     return {
-        "results": list(
-            q.order_by(Bible.lang_id).offset(offset).limit(max_results).all()
-        ),
-        "count": q.count(),
+        "results": results,
+        "total": q.count(),
+        "count": len(results),
+        "offset": offset,
     }
 
 
@@ -74,9 +75,12 @@ def search_books(
     if code:
         filters.append(Book.code.icontains(code))
     q = db.query(Book).join(Bible).filter(*filters)
+    results = list(q.order_by(Book.rank).offset(offset).limit(max_results).all())
     return {
-        "results": list(q.order_by(Book.rank).offset(offset).limit(max_results).all()),
-        "count": q.count(),
+        "results": results,
+        "total": q.count(),
+        "count": len(results),
+        "offset": offset,
     }
 
 
@@ -88,6 +92,7 @@ def search_books(
 def search_verses(
     *,
     version: str,
+    translate_versions: List[str] = Query(None),
     from_book: Annotated[int, Path(ge=1)],
     from_chapter: Annotated[int, Path(ge=1)],
     from_verse: Optional[int] = 1,
@@ -141,39 +146,74 @@ def search_verses(
     if start_verse and end_verse:
         base_q = crud.verse.query_by_version(db, version)
         q = base_q.filter(Verse.id >= start_verse.id, Verse.id <= end_verse.id)
+        results = list(q.order_by(Verse.id).offset(offset).limit(max_results).all())
+        count = len(results)
+        if results and translate_versions:
+            try:
+                translate_versions.remove(version)
+            except ValueError:
+                pass
+            verse_codes = [verse.code for verse in results]
+            extra_results = crud.verse.query_by_versions(
+                db, *translate_versions
+            ).filter(Verse.code.in_(verse_codes))
+            results.extend(extra_results)
+
         return {
-            "results": list(
-                q.order_by(Verse.id).offset(offset).limit(max_results).all()
-            ),
-            "count": q.count(),
+            "results": results,
+            "count": count,
+            "offset": offset,
+            "total": q.count(),
             "previous": base_q.filter(Verse.id == start_verse.id - 1).first(),
             "next": base_q.filter(Verse.id == end_verse.id + 1).first(),
         }
+
     else:
         return {"results": []}
 
 
 @router.get(
-    "/{version}/search/{text}",
+    "/{version}/search",
     status_code=200,
     response_model=VerseItems,
 )
 def search_text(
     *,
     version: str,
-    text: str,
+    text: List[str] = Query(...),
+    book_code: Optional[str] = None,
+    translate_versions: List[str] = Query(None),
     offset: Optional[int] = 0,
     max_results: Optional[int] = 100,
     db: Session = Depends(deps.get_db),
 ):
     """Search for text in verses"""
     base_q = crud.verse.query_by_version(db, version)
-    q = base_q.filter(
-        or_(Verse.content.icontains(text), Verse.subtitle.icontains(text))
-    )
+    filters = []
+    for t in text:
+        filters.append(or_(Verse.content.icontains(t), Verse.subtitle.icontains(t)))
+    q = base_q.filter(or_(*filters))
+    if book_code:
+        q = q.filter(Book.code == book_code)
+
+    results = list(q.order_by(Verse.code).offset(offset).limit(max_results).all())
+    count = len(results)
+    if results and translate_versions:
+        try:
+            translate_versions.remove(version)
+        except ValueError:
+            pass
+        verse_codes = [verse.code for verse in results]
+        extra_results = crud.verse.query_by_versions(db, *translate_versions).filter(
+            Verse.code.in_(verse_codes)
+        )
+        results.extend(extra_results)
+    results.sort(key=lambda x: x.code)
     return {
-        "results": list(q.offset(offset).limit(max_results).all()),
-        "count": q.count(),
+        "results": results,
+        "offset": offset,
+        "count": count,
+        "total": q.count(),
     }
 
 
