@@ -1,6 +1,6 @@
 import os
 import pathlib
-from typing import List, Optional, Union
+from typing import ClassVar, List, Optional, Union
 
 from pydantic import AnyHttpUrl, PostgresDsn, field_validator
 from pydantic.types import SecretStr
@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     API_TITLE: str = "choir_api"
     API_VERSION: str = "/api/v1"
     DATABASE_URL: str = ""
-    DATABASE_TEST_URL: str = ""
+    TEST_DATABASE_URL: str = ""
 
     # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
     # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
@@ -41,14 +41,18 @@ class Settings(BaseSettings):
         raise ValueError(v)
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="ignore"
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore",
     )
 
     @property
     def db_url(self):
-        env = os.environ.get("TESTING", 0)
-        return self.DATABASE_TEST_URL if env else self.DATABASE_URL
+        testing = os.environ.get("TESTING")
+        if testing is None:  # pytest case
+            testing = True
+        return self.TEST_DATABASE_URL if testing else self.DATABASE_URL
 
 
 settings = Settings()
-# print(settings.model_dump())

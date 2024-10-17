@@ -3,7 +3,7 @@ import logging
 import pytest
 
 from app.models.bible import BookTypeEnum
-from tests import get_url
+from tests import delete_url, get_url
 
 logger = logging.getLogger(__name__)
 
@@ -159,3 +159,31 @@ def test_search_text(client):
     assert data.count == 1
     assert data.total == 1
     assert data.results[0].code == "isa_.40.01"
+
+
+def test_delete_bible(client):
+
+    data = get_url(client, "search/")
+    assert data.count == 2
+
+    data = delete_url(client, f"delete/version/{data.results[0].version}")
+    assert data.msg == "Successfully deleted."
+
+    data = get_url(client, "search/")
+    assert data.count == 1
+    last_id = data.results[0].id
+    last_version = data.results[0].version
+
+    data = delete_url(client, f"delete/id/{last_id}")
+    assert data.msg == "Successfully deleted."
+
+    data = get_url(client, "search/", check_empty=False)
+    assert data.count == 0
+
+    data = delete_url(client, f"delete/id/{last_id}", assert_ok=False, to_dict=False)
+    assert data.status_code == 404
+
+    data = delete_url(
+        client, f"delete/version/{last_version}", assert_ok=False, to_dict=False
+    )
+    assert data.status_code == 404

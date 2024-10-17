@@ -37,12 +37,20 @@ def get_url(client, uri, check_empty=True, to_dict=True):
     return standard_check(response, check_empty, to_dict=to_dict)
 
 
+def delete_url(client, uri, assert_ok=True, to_dict=True) -> dict:
+    url = build_url(uri)
+    response = client.delete(url)
+    if assert_ok:
+        assert response.status_code == 200
+    return DictObj(response.json()) if to_dict else response
+
+
 def standard_check(response, check_empty=True, to_dict=True) -> dict[List]:
     assert response.status_code == 200
     data = response.json()
     if check_empty:
         assert len(data.get("results")) > 0
-        print(data.keys())
+        # print(data.keys())
     if to_dict:
         data = DictObj(data)
     return data
