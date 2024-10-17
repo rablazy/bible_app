@@ -128,7 +128,10 @@ def search_verses(
         )
 
     if to_chapter is None:
-        to_chapter = from_chapter if from_book == to_book else 1
+        if from_book == to_book:
+            to_chapter = from_chapter
+        else:
+            to_chapter = dest_book.chapters[-1].rank
 
     if from_book == to_book and to_chapter < from_chapter:
         raise HTTPException(
