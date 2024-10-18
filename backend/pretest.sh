@@ -1,6 +1,8 @@
 #! /usr/bin/env bash
 
-export TESTING=1
+if [ -f ./tests/.env.test ]; then
+  set -a ; . ./tests/.env.test ; set +a
+fi
 
 # Let the DB start
 python ./app/db/db_check.py

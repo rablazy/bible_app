@@ -1,8 +1,15 @@
+import logging
 import os
 from typing import Generator
 
 import pytest
+from dotenv import load_dotenv
 from fastapi.testclient import TestClient
+
+logger = logging.getLogger(__name__)
+loaded = load_dotenv("tests/.env.test", override=True)
+if not loaded:
+    logger.warning("!!! DATABASE_URL in tests/.env.test file is missing !!!")
 
 from app.core.config import settings
 from app.main import app

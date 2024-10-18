@@ -28,7 +28,7 @@ class CRUDBible(CRUD[Bible]):
 
     def delete_by_id(self, db: Session, bible_id: int):
         """Delete bible with all its content"""
-        obj = db.query(Bible).get(bible_id)
+        obj = db.get(Bible, bible_id)
         if obj:
             stmt = delete(Book).where(Book.bible_id == obj.id)
             db.execute(stmt)

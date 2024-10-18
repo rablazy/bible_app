@@ -1,4 +1,3 @@
-import os
 import pathlib
 from typing import ClassVar, List, Optional, Union
 
@@ -15,8 +14,7 @@ class Settings(BaseSettings):
 
     API_TITLE: str = "choir_api"
     API_VERSION: str = "/api/v1"
-    DATABASE_URL: str = ""
-    TEST_DATABASE_URL: str = ""
+    DATABASE_URL: str = "sqlite:///app.db"
 
     # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
     # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
@@ -49,10 +47,8 @@ class Settings(BaseSettings):
 
     @property
     def db_url(self):
-        testing = os.environ.get("TESTING")
-        if testing is None:  # pytest case
-            testing = True
-        return self.TEST_DATABASE_URL if testing else self.DATABASE_URL
+        return self.DATABASE_URL
 
 
 settings = Settings()
+print(settings.db_url)
