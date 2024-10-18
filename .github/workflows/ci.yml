@@ -58,8 +58,7 @@ jobs:
 
     - name: Run tests
       env:
-        ENVIRONMENT: "test"
-        DATABASE_TEST_URL: postgresql://${{env.PG_USER}}:${{env.PG_PASSWORD}}@${{env.PG_SERVER}}:5432/${{env.PG_DB}}
+        DATABASE_URL: postgresql://${{env.PG_USER}}:${{env.PG_PASSWORD}}@${{env.PG_SERVER}}:5432/${{env.PG_DB}}
       run: make testcov
 
     - name: Upload Coverage to Codecov

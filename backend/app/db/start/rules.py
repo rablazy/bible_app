@@ -1,3 +1,4 @@
+from app.db.start.content_check import CHAPTER_VERSES_COUNT_EN
 from app.db.start.import_version import RulesEnum
 from app.models.bible import BookTypeEnum
 
@@ -11,22 +12,35 @@ STANDARD_RULES = [
     (RulesEnum.BOOK_CHAPTER_COUNT, [27, 12]),  # DAN 12 chapters
     (RulesEnum.VERSE_COUNT, [28, 4, 19]),  # HOS 4 - 19 verses
     (RulesEnum.VERSE_COUNT, [49, 6, 24]),  # EFE  6 - 24 verses
-    (RulesEnum.ALL_VERSE_PRESENT, [])
+    (RulesEnum.ALL_VERSE_PRESENT, []),
     # check subtitle for mg1886
 ]
 
-KJV_RULES = [
-    (
-        RulesEnum.VERSE_TEXT,
-        [
-            66,
-            20,
-            11,
-            "And I saw a great white throne, and him that sat on it, from whose face the earth and the heaven fled away; and there was found no place for them.",
-        ],
-    )
+MG_RULES = [
+    (RulesEnum.COUNT_ALL_VERSE, [31099]),
+    (RulesEnum.COUNT_ALL_VERSE, [23141, BookTypeEnum.OLD]),
+    (RulesEnum.COUNT_ALL_VERSE, [7958, BookTypeEnum.NEW]),
+] + STANDARD_RULES
+
+EN_RULES = [
+    (RulesEnum.COUNT_VERSE_PER_BOOK, [CHAPTER_VERSES_COUNT_EN]),
 ]
-KJV_RULES.extend(STANDARD_RULES)
+
+KJV_RULES = (
+    [
+        (
+            RulesEnum.VERSE_TEXT,
+            [
+                66,
+                20,
+                11,
+                "And I saw a great white throne, and him that sat on it, from whose face the earth and the heaven fled away; and there was found no place for them.",
+            ],
+        )
+    ]
+    + STANDARD_RULES
+    + EN_RULES
+)
 
 DIEM_RULES = [
     (RulesEnum.BOOK_COUNT, [73]),

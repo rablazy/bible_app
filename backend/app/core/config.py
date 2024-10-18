@@ -1,3 +1,4 @@
+import os
 import pathlib
 from typing import ClassVar, List, Optional, Union
 
@@ -14,7 +15,7 @@ class Settings(BaseSettings):
 
     API_TITLE: str = "choir_api"
     API_VERSION: str = "/api/v1"
-    DATABASE_URL: str = "sqlite:///app.db"
+    DATABASE_URL: str = ""  # sqlite:///app.db
 
     # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
     # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
@@ -39,7 +40,7 @@ class Settings(BaseSettings):
         raise ValueError(v)
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=os.getenv("ENV", ".env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore",

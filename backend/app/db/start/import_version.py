@@ -33,6 +33,8 @@ class RulesEnum(enum.Enum):
     VERSE_COUNT = "count_verse"
     VERSE_TEXT = "verse_text"
     ALL_VERSE_PRESENT = "all_verse_present"
+    COUNT_VERSE_PER_BOOK = "verse_per_book"
+    COUNT_ALL_VERSE = "count_all_verse"
 
 
 class BibleValidator:
@@ -77,6 +79,13 @@ class BibleValidator:
             == expected_chapter_count
         )
 
+    def count_all_verse(self, expected, *book_category):
+        """Count all verse based on book_category"""
+        q = self._q_verse()
+        if book_category:
+            q = q.filter(Book.category.in_(book_category))
+        assert q.count() == expected
+
     def count_verse(self, book_rank, chapter_rank, expected):
         """Compare numbers of verses in chapter to expected"""
         assert (
@@ -113,6 +122,25 @@ class BibleValidator:
             .count()
             == 0
         )
+
+    def verse_per_book(self, expected: dict):
+        """Check if verses count per book is ok"""
+        books = self._q_book().all()
+        for b in books:
+            logger.info("Checking book %s, rank:%s", b, b.rank)
+            expected_chapters = expected.get(b.rank).get("chapters")
+            current_verses = sum([c.verse_count for c in b.chapters])
+            expected_verses = expected.get(b.rank).get("verses")
+
+            logger.info(
+                "chapters : %s vs expected: %s | verses : %s vs expected: %s",
+                b.chapter_count,
+                expected_chapters,
+                current_verses,
+                expected_verses,
+            )
+            assert b.chapter_count == expected_chapters
+            assert current_verses == expected_verses
 
     def _q_book(self):
         return self.db.query(Book).filter(*self.version_filter)
@@ -167,6 +195,8 @@ class BibleImporter:
             bible = Bible(**(omit(bible_item.__dict__, "books", "lang")))
             bible.lang_id = self.language.id
             crud.bible.create(self.db, bible)
+
+            rank_all = 1
 
             self.bible_id = bible.id  # save newly created bible id, used later on
             logger.info("Bible %s inserted, id: %s", self.version, self.bible_id)
@@ -236,7 +266,12 @@ class BibleImporter:
                                     chapter.rank,
                                     verse.rank,
                                 )
-                                chapter.verses.append(verse)
+                                verse.rank_all = rank_all
+                                if verse.content and any(
+                                    ch.isalpha() for ch in verse.content
+                                ):
+                                    rank_all += 1
+                                    chapter.verses.append(verse)
 
             self.db.commit()
             logger.info("%s book inserted.", len(books))

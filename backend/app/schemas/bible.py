@@ -83,6 +83,7 @@ class VerseItem(BaseModel):
     subtitle: Optional[Union[str, int, bytes]] = None
     content: str
     rank: int
+    rank_all: Optional[int] = None
     code: Optional[str] = None
     # chapter_id : int
     chapter_rank: Optional[int] = None

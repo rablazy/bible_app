@@ -131,7 +131,7 @@ def search_verses(
         if from_book == to_book:
             to_chapter = from_chapter
         else:
-            to_chapter = dest_book.chapters[-1].rank
+            to_chapter = max([c.rank for c in dest_book.chapters])
 
     if from_book == to_book and to_chapter < from_chapter:
         raise HTTPException(
@@ -158,32 +158,39 @@ def search_verses(
         qf = qf.filter(Book.rank == to_book)
         if to_chapter is not None and to_chapter > 0:
             qf = qf.filter(Chapter.rank == to_chapter)
-        end_verse = qf.order_by(Verse.id.desc()).first()
+        end_verse = qf.order_by(Verse.rank_all.desc()).first()
 
     if start_verse and end_verse:
+        print(f"start_verse : {start_verse} , end_verse: {end_verse}")
         base_q = crud.verse.query_by_version(db, version)
-        q = base_q.filter(Verse.id >= start_verse.id, Verse.id <= end_verse.id)
-        results = list(q.order_by(Verse.id).offset(offset).limit(max_results).all())
+        q = base_q.filter(
+            Verse.rank_all >= start_verse.rank_all, Verse.rank_all <= end_verse.rank_all
+        )
+        results = list(
+            q.order_by(Verse.rank_all).offset(offset).limit(max_results).all()
+        )
         count = len(results)
+        try:
+            translate_versions.remove(version)
+        except (ValueError, AttributeError):
+            pass
         if results and translate_versions:
-            try:
-                translate_versions.remove(version)
-            except ValueError:
-                pass
             verse_codes = [verse.code for verse in results]
             extra_results = crud.verse.query_by_versions(
                 db, *translate_versions
             ).filter(Verse.code.in_(verse_codes))
             results.extend(extra_results)
 
-        results.sort(key=lambda x: x.code)
+        results.sort(key=lambda x: x.rank_all)
         return {
             "results": results,
             "count": count,
             "offset": offset,
             "total": q.count(),
-            "previous": base_q.filter(Verse.id == start_verse.id - 1).first(),
-            "next": base_q.filter(Verse.id == end_verse.id + 1).first(),
+            "previous": base_q.filter(
+                Verse.rank_all == start_verse.rank_all - 1
+            ).first(),
+            "next": base_q.filter(Verse.rank_all == end_verse.rank_all + 1).first(),
         }
 
     else:
@@ -214,19 +221,19 @@ def search_text(
     if book_code:
         q = q.filter(Book.code == book_code)
 
-    results = list(q.order_by(Verse.code).offset(offset).limit(max_results).all())
+    results = list(q.order_by(Verse.rank_all).offset(offset).limit(max_results).all())
     count = len(results)
+    try:
+        translate_versions.remove(version)
+    except (ValueError, AttributeError):
+        pass
     if results and translate_versions:
-        try:
-            translate_versions.remove(version)
-        except ValueError:
-            pass
         verse_codes = [verse.code for verse in results]
         extra_results = crud.verse.query_by_versions(db, *translate_versions).filter(
             Verse.code.in_(verse_codes)
         )
         results.extend(extra_results)
-    results.sort(key=lambda x: x.code)
+    results.sort(key=lambda x: x.rank_all)
     return {
         "results": results,
         "offset": offset,

@@ -7,12 +7,13 @@ from dotenv import load_dotenv
 from fastapi.testclient import TestClient
 
 logger = logging.getLogger(__name__)
-loaded = load_dotenv("tests/.env.test", override=True)
-if not loaded:
-    logger.warning("!!! DATABASE_URL in tests/.env.test file is missing !!!")
+loaded = load_dotenv("./.env.test", override=True)
 
 from app.core.config import settings
 from app.main import app
+
+# print(f"loaded : {loaded}, from conftest db_url >>>  {settings.db_url}")
+# exit(1)
 
 
 def pytest_configure():

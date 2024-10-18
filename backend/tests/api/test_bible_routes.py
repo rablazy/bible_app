@@ -136,11 +136,15 @@ def test_get_verse_across_books(client):
     assert data.next.chapter_rank == 2
 
 
-def test_get_all_verses(client):
-    """get all verses of new testament"""
+def test_count_verses(client):
+    """count all verses of new testament and overall"""
     data = get_url(client, f"{MG_VERSION}/verses/mat_/1?from_verse=1&to_book_code=rev_")
     assert len(data.results) == 100
     assert data.total == 7958
+
+    # data = get_url(client, f"{MG_VERSION}/verses/gen_/1?from_verse=1&to_book_code=rev_")
+    # assert len(data.results) == 100
+    # assert data.total == 31102
 
 
 def test_get_all_verses_limit_set(client):
@@ -161,35 +165,40 @@ def test_search_text(client):
     assert data.results[0].code == "isa_.40.01"
 
 
-def test_delete_bible(client):
-
-    data = get_url(client, "search/")
-    assert data.count == 2
-
+def test_delete_bible_error(client):
     data = delete_url(client, "delete/version/ssss", assert_ok=False, to_dict=False)
     assert data.status_code == 404
 
     data = delete_url(client, "delete/id/-1", assert_ok=False, to_dict=False)
     assert data.status_code == 404
 
-    # data = delete_url(client, f"delete/version/{data.results[0].version}")
-    # assert data.msg == "Successfully deleted."
 
-    # data = get_url(client, "search/")
-    # assert data.count == 1
-    # last_id = data.results[0].id
-    # last_version = data.results[0].version
+def test_delete_bible_by_version(client):
+    data = get_url(client, "search/")
+    assert data.count == 2
 
-    # data = delete_url(client, f"delete/id/{last_id}")
-    # assert data.msg == "Successfully deleted."
+    delete_version = data.results[0].version
+    data = delete_url(client, f"delete/version/{delete_version}")
+    assert data.msg == "Successfully deleted."
 
-    # data = get_url(client, "search/", check_empty=False)
-    # assert data.count == 0
+    data = delete_url(
+        client, f"delete/version/{delete_version}", assert_ok=False, to_dict=False
+    )
+    assert data.status_code == 404
 
-    # data = delete_url(client, f"delete/id/{last_id}", assert_ok=False, to_dict=False)
-    # assert data.status_code == 404
+    data = get_url(client, "search/")
+    assert data.count == 1
 
-    # data = delete_url(
-    #     client, f"delete/version/{last_version}", assert_ok=False, to_dict=False
-    # )
-    # assert data.status_code == 404
+
+def test_delete_bible_by_id(client):
+
+    data = get_url(client, "search/")
+    assert data.count > 0
+
+    delete_id = data.results[0].id
+
+    data = delete_url(client, f"delete/id/{delete_id}")
+    assert data.msg == "Successfully deleted."
+
+    data = delete_url(client, f"delete/id/{delete_id}", assert_ok=False, to_dict=False)
+    assert data.status_code == 404

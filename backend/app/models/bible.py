@@ -38,6 +38,42 @@ class Bible(Base):
     # books = relationship("Book", back_populates="bible", cascade="all, delete")
 
 
+class Verse(Base):
+    id = Column(Integer, primary_key=True, index=True)
+    subtitle = Column(String(1024), nullable=True)
+    content = Column(String(4096), nullable=False)
+    rank = Column(Integer, nullable=False)
+    rank_all = Column(Integer, nullable=False)
+    code = Column(String, nullable=False)
+    chapter_id = Column(
+        Integer, ForeignKey("chapter.id", ondelete="cascade"), nullable=False
+    )
+    chapter = relationship("Chapter", back_populates="verses")
+
+    @property
+    def chapter_rank(self):
+        return self.chapter.rank
+
+    @property
+    def book_rank(self):
+        return self.chapter.book.rank if (self.chapter and self.chapter.book) else None
+
+    @property
+    def book_name(self):
+        return self.chapter.book.name if (self.chapter and self.chapter.book) else None
+
+    @property
+    def book_short_name(self):
+        return (
+            self.chapter.book.short_name
+            if (self.chapter and self.chapter.book)
+            else None
+        )
+
+    def __str__(self):
+        return f"{self.chapter}.{self.rank}"
+
+
 class Chapter(Base):
     # __tablename__ = "chapter"
 
@@ -48,6 +84,13 @@ class Chapter(Base):
     book = relationship("Book", back_populates="chapters")
     verses: Mapped[List["Verse"]] = relationship(
         back_populates="chapter", cascade="all, delete", passive_deletes=True
+    )
+
+    verse_count = column_property(
+        select(func.count(Verse.chapter_id))
+        .filter(Verse.chapter_id == id)
+        .scalar_subquery(),
+        deferred=True,
     )
 
     def __str__(self):
@@ -82,38 +125,3 @@ class Book(Base):
 
     def __str__(self):
         return self.name
-
-
-class Verse(Base):
-    id = Column(Integer, primary_key=True, index=True)
-    subtitle = Column(String(1024), nullable=True)
-    content = Column(String(4096), nullable=False)
-    rank = Column(Integer, nullable=False)
-    code = Column(String, nullable=False)
-    chapter_id = Column(
-        Integer, ForeignKey("chapter.id", ondelete="cascade"), nullable=False
-    )
-    chapter = relationship("Chapter", back_populates="verses")
-
-    @property
-    def chapter_rank(self):
-        return self.chapter.rank
-
-    @property
-    def book_rank(self):
-        return self.chapter.book.rank if (self.chapter and self.chapter.book) else None
-
-    @property
-    def book_name(self):
-        return self.chapter.book.name if (self.chapter and self.chapter.book) else None
-
-    @property
-    def book_short_name(self):
-        return (
-            self.chapter.book.short_name
-            if (self.chapter and self.chapter.book)
-            else None
-        )
-
-    def __str__(self):
-        return f"{self.chapter}.{self.rank}"
