@@ -1,4 +1,4 @@
-from app.db.start.content_check import CHAPTER_VERSES_COUNT_EN
+from app.db.start.constants import CHAPTER_VERSES_COUNT_EN, CHAPTER_VERSES_COUNT_FR
 from app.db.start.import_version import RulesEnum
 from app.models.bible import BookTypeEnum
 
@@ -24,6 +24,10 @@ MG_RULES = [
 
 EN_RULES = [
     (RulesEnum.COUNT_VERSE_PER_BOOK, [CHAPTER_VERSES_COUNT_EN]),
+]
+
+FR_RULES = [
+    (RulesEnum.COUNT_VERSE_PER_BOOK, [CHAPTER_VERSES_COUNT_FR]),
 ]
 
 KJV_RULES = (

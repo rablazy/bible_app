@@ -97,8 +97,17 @@ class VerseItems(ListItems[VerseItem]):
 
     next: Optional[VerseItem] = None
     previous: Optional[VerseItem] = None
+    trans: Optional[List["VerseTransItems"]] = []
+
+
+class VerseTransItems(BaseModel):
+    """Verse list with translations"""
+
+    version: str
+    verses: Optional[List[VerseItem]] = []
 
 
 BibleItem.model_rebuild()
 ChapterItem.model_rebuild()
+VerseItems.model_rebuild()
 # BookItem.model_rebuild()

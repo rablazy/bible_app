@@ -9,7 +9,14 @@ from sqlalchemy.sql import and_, or_
 from app import crud
 from app.api import deps
 from app.models.bible import Bible, Book, BookTypeEnum, Chapter, Verse
-from app.schemas.bible import BibleItem, BookItemShort, ListItems, VerseItems
+from app.schemas.bible import (
+    BibleItem,
+    BookItemShort,
+    ListItems,
+    VerseItem,
+    VerseItems,
+    VerseTransItems,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -85,20 +92,20 @@ def search_books(
 
 
 @router.get(
-    "/{version}/verses/{from_book_code}/{from_chapter}",
+    "/{version}/verses/{from_book_code}/{from_chapter}/{from_verse}",
     status_code=200,
     response_model=VerseItems,
 )
 def search_verses(
     *,
     version: str,
-    translate_versions: List[str] = Query(None),
     from_book_code: str,
     from_chapter: Annotated[int, Path(ge=1)],
-    from_verse: Optional[int] = 1,
+    from_verse: Annotated[int, Path(ge=1)],
     to_book_code: Optional[str] = None,
     to_chapter: Optional[int] = None,
     to_verse: Optional[int] = None,
+    translate_versions: List[str] = Query(None),
     offset: Optional[int] = 0,
     max_results: Optional[int] = 100,
     db: Session = Depends(deps.get_db),
@@ -169,24 +176,30 @@ def search_verses(
         results = list(
             q.order_by(Verse.rank_all).offset(offset).limit(max_results).all()
         )
-        count = len(results)
+
         try:
             translate_versions.remove(version)
         except (ValueError, AttributeError):
             pass
+
+        trans = []
         if results and translate_versions:
             verse_codes = [verse.code for verse in results]
-            extra_results = crud.verse.query_by_versions(
-                db, *translate_versions
-            ).filter(Verse.code.in_(verse_codes))
-            results.extend(extra_results)
+            for tv in translate_versions:
+                qv = (
+                    crud.verse.query_by_version(db, tv)
+                    .filter(Verse.code.in_(verse_codes))
+                    .order_by(Verse.rank_all)
+                    .all()
+                )
+                trans.append({"version": tv, "verses": qv})
 
-        results.sort(key=lambda x: x.rank_all)
         return {
             "results": results,
-            "count": count,
+            "count": len(results),
             "offset": offset,
             "total": q.count(),
+            "trans": trans,
             "previous": base_q.filter(
                 Verse.rank_all == start_verse.rank_all - 1
             ).first(),
@@ -207,6 +220,7 @@ def search_text(
     version: str,
     text: List[str] = Query(...),
     book_code: Optional[str] = None,
+    book_chapter: Optional[int] = None,
     translate_versions: List[str] = Query(None),
     offset: Optional[int] = 0,
     max_results: Optional[int] = 100,
@@ -220,25 +234,34 @@ def search_text(
     q = base_q.filter(or_(*filters))
     if book_code:
         q = q.filter(Book.code == book_code)
+    if book_chapter:
+        q = q.filter(Chapter.rank == book_chapter)
 
     results = list(q.order_by(Verse.rank_all).offset(offset).limit(max_results).all())
-    count = len(results)
+
     try:
         translate_versions.remove(version)
     except (ValueError, AttributeError):
         pass
+
+    trans = []
     if results and translate_versions:
         verse_codes = [verse.code for verse in results]
-        extra_results = crud.verse.query_by_versions(db, *translate_versions).filter(
-            Verse.code.in_(verse_codes)
-        )
-        results.extend(extra_results)
-    results.sort(key=lambda x: x.rank_all)
+        for tv in translate_versions:
+            qv = (
+                crud.verse.query_by_version(db, tv)
+                .filter(Verse.code.in_(verse_codes))
+                .order_by(Verse.rank_all)
+                .all()
+            )
+            trans.append({"version": tv, "verses": qv})
+
     return {
         "results": results,
         "offset": offset,
-        "count": count,
+        "count": len(results),
         "total": q.count(),
+        "trans": trans,
     }
 
 

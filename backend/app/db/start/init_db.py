@@ -28,13 +28,13 @@ def main() -> None:
             "encoding": "utf-8",
             "validation_rules": KJV_RULES,
         },  # OK
-        # {
-        #     "lang": "fr",
-        #     "version": "LSG_21",
-        #     "src_type": "standard_json",
-        #     "encoding": "utf-8",
-        #     "validation_rules": STANDARD_RULES,
-        # },  # OK
+        {
+            "lang": "fr",
+            "version": "LSG_21",
+            "src_type": "standard_json",
+            "encoding": "utf-8",
+            "validation_rules": STANDARD_RULES,
+        },  # OK
         {
             "lang": "en",
             "version": "ASV_1901",

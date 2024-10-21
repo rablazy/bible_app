@@ -37,6 +37,11 @@ def get_url(client, uri, check_empty=True, to_dict=True):
     return standard_check(response, check_empty, to_dict=to_dict)
 
 
+def get_raw_url(client, uri):
+    url = build_url(uri)
+    return client.get(url)
+
+
 def delete_url(client, uri, assert_ok=True, to_dict=True) -> dict:
     url = build_url(uri)
     response = client.delete(url)

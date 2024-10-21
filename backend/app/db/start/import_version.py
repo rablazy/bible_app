@@ -8,8 +8,8 @@ from pydash import omit
 from sqlalchemy import null, or_
 
 from app import crud
-from app.db.constants import BOOK_CODES
 from app.db.session import SessionLocal
+from app.db.start.constants import BOOK_CODES
 from app.models.bible import Bible, Book, BookTypeEnum, Chapter, Verse
 from app.schemas.bible import BibleItem
 
