@@ -83,7 +83,10 @@ class Chapter(Base):
     book_id = Column(Integer, ForeignKey("book.id", ondelete="cascade"), nullable=False)
     book = relationship("Book", back_populates="chapters")
     verses: Mapped[List["Verse"]] = relationship(
-        back_populates="chapter", cascade="all, delete", passive_deletes=True
+        back_populates="chapter",
+        cascade="all, delete",
+        passive_deletes=True,
+        order_by="Verse.rank_all",
     )
 
     verse_count = column_property(
@@ -122,7 +125,8 @@ class Book(Base):
     )
     bible = relationship("Bible")  # back_populates="books"
     chapters: Mapped[List["Chapter"]] = relationship(
-        back_populates="book", cascade="all, delete", passive_deletes=True
+        back_populates="book", cascade="all, delete", passive_deletes=True,
+        order_by="Chapter.rank",
     )
     chapter_count = column_property(
         select(func.count(Chapter.book_id))

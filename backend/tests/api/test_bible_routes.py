@@ -234,6 +234,15 @@ def test_chapter_list(client):
     assert chapter_23.verse_count == 39
 
 
+def test_get_chapter(client):
+    data = get_url(client, f"{MG_VERSION}/chapters/jer_.46", check_empty=False)
+    assert data.code == "jer_.46"
+    assert data.verse_count == 28
+    assert len(data.verses) == 28
+    assert data.verses[4].code == "jer_.46.05"
+    assert data.verses[-1].code == "jer_.46.28"
+
+
 def test_delete_bible_error(client):
     data = delete_url(client, "delete/version/ssss", assert_ok=False, to_dict=False)
     assert data.status_code == 404

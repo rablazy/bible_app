@@ -101,7 +101,7 @@ def search_books(
     status_code=200,
     response_model=ListItems[ChapterItemNoVerses],
 )
-def view_chapters(
+def view_book_chapters(
     *,
     version: str,
     book_code: str,
@@ -112,6 +112,26 @@ def view_chapters(
     )
     count = q.count()
     return {"results": q.all(), "offset": 0, "count": count, "total": count}
+
+
+@router.get(
+    "/{version}/chapters/{chapter_code}",
+    status_code=200,
+    response_model=ChapterItem,
+)
+def get_chapter(
+    *,
+    version: str,
+    chapter_code: str,
+    db: Session = Depends(deps.get_db),
+):
+    """Get one chapter with all its verses"""
+
+    q = crud.chapter.get_items(db, version, filters=[Chapter.code == chapter_code])
+    chapter = q.first()
+    if chapter:
+        return chapter
+    raise HTTPException(status_code=404, detail="Chapter not found")
 
 
 @router.get(

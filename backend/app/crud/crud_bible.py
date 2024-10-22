@@ -79,7 +79,7 @@ class CRUDChapter(CRUDBibleItem[Chapter]):
         )
 
 
-class CRUDVerse(CRUD[Verse]):
+class CRUDVerse(CRUDBibleItem[Verse]):
     def query_by_version(self, db: Session, version):
         return (
             db.query(Verse)
