@@ -229,7 +229,7 @@ class BibleImporter:
                     )
                     for chap in b.chapters:
                         chapter = Chapter(
-                            **(omit(chap.__dict__, "book_rank", "verses"))
+                            **(omit(chap.__dict__, "book_rank", "verses", "name"))
                         )  # "book_id",
                         chapter.book_id = book.id
                         chapter.code = f"{book.code}.{chapter.rank}"

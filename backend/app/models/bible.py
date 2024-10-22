@@ -94,11 +94,15 @@ class Chapter(Base):
     )
 
     def __str__(self):
-        return f"{self.book.short_name.capitalize()}. {self.rank}"
+        return (
+            f"{self.book.short_name.capitalize()}. {self.rank}"
+            if self.book
+            else self.code
+        )
 
     @property
     def name(self):
-        return f"{self.book.name} {self.rank}"
+        return f"{self.book.name} {self.rank}" if self.book else self.code
 
     @property
     def book_rank(self):
