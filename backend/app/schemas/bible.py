@@ -56,15 +56,23 @@ class BookItemShort(BaseModel):
     chapter_count: int = 0
 
 
-class ChapterItem(BaseModel):
+class ChapterItemNoVerses(BaseModel):
     """Pydantic model for Chapter"""
 
     model_config = ConfigDict(from_attributes=True)
     # id : int
     rank: int
+    name: Optional[str] = None
     code: Optional[str] = None
     book_id: Optional[int] = None
     book_rank: Optional[int] = None
+    verse_count: Optional[int] = None
+
+
+class ChapterItem(ChapterItemNoVerses):
+    """Pydantic model for Chapter"""
+
+    model_config = ConfigDict(from_attributes=True)
     verses: List["VerseItem"] = []
 
 

@@ -225,6 +225,15 @@ def test_search_text_translate(client):
     assert data.trans[0].verses[-1].code == "mat_.05.11"
 
 
+def test_chapter_list(client):
+    data = get_url(client, f"{MG_VERSION}/mat_/chapters")
+    assert data.total == 28
+    chapter_23 = data.results[22]
+    assert chapter_23.name == "Matio 23"
+    assert chapter_23.code == "mat_.23"
+    assert chapter_23.verse_count == 39
+
+
 def test_delete_bible_error(client):
     data = delete_url(client, "delete/version/ssss", assert_ok=False, to_dict=False)
     assert data.status_code == 404

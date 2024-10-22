@@ -97,6 +97,10 @@ class Chapter(Base):
         return f"{self.book.short_name.capitalize()}. {self.rank}"
 
     @property
+    def name(self):
+        return f"{self.book.name} {self.rank}"
+
+    @property
     def book_rank(self):
         return self.book.rank if self.book else None
 

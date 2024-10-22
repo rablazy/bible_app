@@ -1,8 +1,34 @@
+from typing import Generic, TypeVar
+
 from sqlalchemy import delete, or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Query, Session
 
 from app.crud.base import CRUD
+from app.db.base_class import Base
 from app.models.bible import Bible, Book, Chapter, Language, Verse
+
+ModelType = TypeVar("ModelType", bound=Base)
+
+
+class CRUDBibleItem(CRUD[ModelType]):
+    def query_by_version(self, db: Session, version) -> Query:
+        raise NotImplementedError
+
+    def get_items(
+        self,
+        db: Session,
+        bible_version: str,
+        filters=None,
+        ordering=None,
+        fetch=False,
+    ):
+        q = self.query_by_version(db, bible_version)
+        if filters:
+            q = q.filter(*filters)
+        if ordering:
+            q = q.order_by(ordering)
+
+        return q.all() if fetch else q
 
 
 class CRUDLanguage(CRUD[Language]):
@@ -38,12 +64,19 @@ class CRUDBible(CRUD[Bible]):
             raise ValueError(f"Bible with id {bible_id} not found")
 
 
-class CRUDBook(CRUD[Book]):
-    ...
+class CRUDBook(CRUDBibleItem[Book]):
+    def query_by_version(self, db: Session, version):
+        return db.query(Book).join(Bible).filter(Bible.version.ilike(version))
 
 
-class CRUDChapter(CRUD[Chapter]):
-    ...
+class CRUDChapter(CRUDBibleItem[Chapter]):
+    def query_by_version(self, db: Session, version):
+        return (
+            db.query(Chapter)
+            .join(Book)
+            .join(Bible)
+            .filter(Bible.version.ilike(version))
+        )
 
 
 class CRUDVerse(CRUD[Verse]):

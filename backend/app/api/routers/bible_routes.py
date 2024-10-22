@@ -2,7 +2,6 @@ import logging
 from typing import Annotated, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
-from sqlalchemy import delete
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import and_, or_
 
@@ -12,10 +11,10 @@ from app.models.bible import Bible, Book, BookTypeEnum, Chapter, Verse
 from app.schemas.bible import (
     BibleItem,
     BookItemShort,
+    ChapterItem,
+    ChapterItemNoVerses,
     ListItems,
-    VerseItem,
     VerseItems,
-    VerseTransItems,
 )
 
 logger = logging.getLogger(__name__)
@@ -29,8 +28,8 @@ def search_bibles(
     db: Session = Depends(deps.get_db),
     lang: Optional[str] = None,
     version: Optional[str] = None,
-    offset: Optional[int] = 0,
-    max_results: Optional[int] = 10,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    max_results: Annotated[int, Query(ge=1, le=100)] = 100,
 ) -> dict:
     """
     Search for bible(s)
@@ -67,28 +66,52 @@ def search_books(
     ),
     name: Optional[str] = None,
     code: Optional[str] = None,
-    offset: Optional[int] = 0,
-    max_results: Optional[int] = 100,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    max_results: Annotated[int, Query(ge=1, le=100)] = 100,
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """
     Search for book(s) in specific bible
     """
-    filters = [Bible.version.ilike(version)]
+    filters = []
     if book_type != "All":
         filters.append(Book.category == book_type.upper())
     if name:
         filters.append(Book.name.icontains(name))
     if code:
         filters.append(Book.code.icontains(code))
-    q = db.query(Book).join(Bible).filter(*filters)
-    results = list(q.order_by(Book.rank).offset(offset).limit(max_results).all())
+
+    q = crud.book.get_items(
+        db,
+        version,
+        filters=filters,
+        ordering=Book.rank,
+    )
+    results = list(q.offset(offset).limit(max_results).all())
     return {
         "results": results,
         "total": q.count(),
         "count": len(results),
         "offset": offset,
     }
+
+
+@router.get(
+    "/{version}/{book_code}/chapters",
+    status_code=200,
+    response_model=ListItems[ChapterItemNoVerses],
+)
+def view_chapters(
+    *,
+    version: str,
+    book_code: str,
+    db: Session = Depends(deps.get_db),
+):
+    q = crud.chapter.get_items(
+        db, version, filters=[Book.code == book_code], ordering=Chapter.rank
+    )
+    count = q.count()
+    return {"results": q.all(), "offset": 0, "count": count, "total": count}
 
 
 @router.get(
@@ -106,8 +129,8 @@ def search_verses(
     to_chapter: Optional[int] = None,
     to_verse: Optional[int] = None,
     translate_versions: List[str] = Query(None),
-    offset: Optional[int] = 0,
-    max_results: Optional[int] = 100,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    max_results: Annotated[int, Query(ge=1, le=100)] = 100,
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """Load on verse or multiple verses across chapters"""
@@ -222,8 +245,8 @@ def search_text(
     book_code: Optional[str] = None,
     book_chapter: Optional[int] = None,
     translate_versions: List[str] = Query(None),
-    offset: Optional[int] = 0,
-    max_results: Optional[int] = 100,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    max_results: Annotated[int, Query(ge=1, le=100)] = 100,
     db: Session = Depends(deps.get_db),
 ):
     """Search for text in verses"""
@@ -265,14 +288,14 @@ def search_text(
     }
 
 
-@router.delete("/delete/id/{id}")
-def delete_bible_by_id(id: int, db: Session = Depends(deps.get_db)):
+@router.delete("/delete/id/{bid}")
+def delete_bible_by_id(bid: int, db: Session = Depends(deps.get_db)):
     """Delete bible by id"""
     try:
-        crud.bible.delete_by_id(db, id)
+        crud.bible.delete_by_id(db, bid)
         return {"msg": "Successfully deleted."}
     except ValueError:
-        raise HTTPException(status_code=404, detail=f"Bible with id {id} not found")
+        raise HTTPException(status_code=404, detail=f"Bible with id {bid} not found")
 
 
 @router.delete("/delete/version/{version}")
