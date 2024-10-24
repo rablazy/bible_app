@@ -10,6 +10,9 @@ coverage*
 app.db*
 log.txt
 
+app/db/local/
+preload.sh
+
 export/
 original/
 

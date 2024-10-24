@@ -86,7 +86,9 @@ class BookItem(BookItemShort):
 class VerseItem(BaseModel):
     """Pydantic model for Verse"""
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+    )  # ignored_types=["references"]
     # id : int
     subtitle: Optional[Union[str, int, bytes]] = None
     content: str
@@ -98,6 +100,7 @@ class VerseItem(BaseModel):
     book_rank: Optional[int] = None
     book_name: Optional[str] = None
     book_short_name: Optional[str] = None
+    refs: Optional[str] = None
 
 
 class VerseItems(ListItems[VerseItem]):
@@ -117,5 +120,6 @@ class VerseTransItems(BaseModel):
 
 BibleItem.model_rebuild()
 ChapterItem.model_rebuild()
+VerseItem.model_rebuild()
 VerseItems.model_rebuild()
 # BookItem.model_rebuild()

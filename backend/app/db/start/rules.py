@@ -1,4 +1,8 @@
-from app.db.start.constants import CHAPTER_VERSES_COUNT_EN, CHAPTER_VERSES_COUNT_FR
+from app.db.start.constants import (
+    CHAPTER_VERSES_COUNT_EN,
+    CHAPTER_VERSES_COUNT_FR,
+    CHAPTER_VERSES_COUNT_MG,
+)
 from app.db.start.import_version import RulesEnum
 from app.models.bible import BookTypeEnum
 
@@ -20,6 +24,7 @@ MG_RULES = [
     (RulesEnum.COUNT_ALL_VERSE, [31099]),
     (RulesEnum.COUNT_ALL_VERSE, [23141, BookTypeEnum.OLD]),
     (RulesEnum.COUNT_ALL_VERSE, [7958, BookTypeEnum.NEW]),
+    (RulesEnum.COUNT_VERSE_PER_BOOK, [CHAPTER_VERSES_COUNT_MG]),
 ] + STANDARD_RULES
 
 EN_RULES = [

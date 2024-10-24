@@ -99,4 +99,4 @@ $ docker run -p 8001:8001 --name <container_name> <image_name>
 
 
 ## License
-MIT © <b>Olivier SIMON</b> 🇲🇬 [blazeorjohny6\@gmail.com](mailto:blazeorjohny6@gmail.com)
+MIT © <b>Olivier</b> 🇲🇬 [blazeorjohny6\@gmail.com](mailto:blazeorjohny6@gmail.com)

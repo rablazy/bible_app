@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 pytest.BASE_URL = "bible"
 
-MG_VERSION = "BMG_1886"
+MG_VERSION = "BMG_1965"
 
 
 def test_main(client):
@@ -53,7 +53,7 @@ def test_search_books_old_testament(client):
         f"{MG_VERSION}/books?offset=10&max_results=20&book_type={BookTypeEnum.OLD.value}",
     )
     assert len(data.results) == 20
-    assert data.results[0].short_name.upper() == "1 MPA"
+    assert data.results[0].short_name.upper() == "1MPA"
     assert data.results[-1].short_name.upper() == "AMO"
 
 
@@ -253,7 +253,8 @@ def test_delete_bible_error(client):
 
 def test_delete_bible_by_version(client):
     data = get_url(client, "search/")
-    assert data.count == 2
+    assert data.count > 0
+    count = data.count
 
     delete_version = data.results[0].version
     data = delete_url(client, f"delete/version/{delete_version}")
@@ -265,7 +266,7 @@ def test_delete_bible_by_version(client):
     assert data.status_code == 404
 
     data = get_url(client, "search/")
-    assert data.count == 1
+    assert data.count == count - 1
 
 
 def test_delete_bible_by_id(client):

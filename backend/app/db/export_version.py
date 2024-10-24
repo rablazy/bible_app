@@ -28,7 +28,11 @@ class ReverseData:
                 b_item = BibleItem.model_validate(bible)
 
                 books = (
-                    db.query(Book).join(Chapter).filter(Book.bible_id == bible.id).all()
+                    db.query(Book)
+                    .join(Chapter)
+                    .order_by(Book.rank)
+                    .filter(Book.bible_id == bible.id)
+                    .all()
                 )
                 b_item.books = [BookItem.model_validate(book) for book in books]
 

@@ -1,5 +1,5 @@
 import enum
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import Column, Enum, ForeignKey, Integer, String, func, select
 from sqlalchemy.orm import Mapped, column_property, relationship
@@ -45,6 +45,7 @@ class Verse(Base):
     rank = Column(Integer, nullable=False)
     rank_all = Column(Integer, nullable=False)
     code = Column(String, nullable=False)
+    refs = Column(String)
     chapter_id = Column(
         Integer, ForeignKey("chapter.id", ondelete="cascade"), nullable=False
     )
@@ -125,7 +126,9 @@ class Book(Base):
     )
     bible = relationship("Bible")  # back_populates="books"
     chapters: Mapped[List["Chapter"]] = relationship(
-        back_populates="book", cascade="all, delete", passive_deletes=True,
+        back_populates="book",
+        cascade="all, delete",
+        passive_deletes=True,
         order_by="Chapter.rank",
     )
     chapter_count = column_property(

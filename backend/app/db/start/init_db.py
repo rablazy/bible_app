@@ -16,11 +16,18 @@ def main() -> None:
     bibles = [
         {
             "lang": "mg",
-            "version": "BMG_1886",
+            "version": "BMG_1965",
             "src_type": "standard_json",
             "encoding": "utf-8",
             "validation_rules": MG_RULES,  # customize
         },  # OK
+        # {
+        #     "lang": "mg",
+        #     "version": "BMG_1886",
+        #     "src_type": "standard_json",
+        #     "encoding": "utf-8",
+        #     "validation_rules": MG_RULES,  # customize
+        # },  # OK
         {
             "lang": "en",
             "version": "KJV",
