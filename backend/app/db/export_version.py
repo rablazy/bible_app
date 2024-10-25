@@ -26,6 +26,7 @@ class ReverseData:
             bible = crud.bible.query_by_version(db, version).first()
             if bible:
                 b_item = BibleItem.model_validate(bible)
+                delattr(b_item, "id")
 
                 books = (
                     db.query(Book)
@@ -35,6 +36,20 @@ class ReverseData:
                     .all()
                 )
                 b_item.books = [BookItem.model_validate(book) for book in books]
+
+                for book in b_item.books:
+                    delattr(book, "bible_id")
+                    for chapter in book.chapters:
+                        for attr in ["book_rank", "book_id"]:
+                            delattr(chapter, attr)
+                        for verse in chapter.verses:
+                            for attr in [
+                                "chapter_rank",
+                                "book_rank",
+                                "book_name",
+                                "book_short_name",
+                            ]:
+                                delattr(verse, attr)
 
                 path = os.path.join(ROOT, "export", "bible", bible.lang.code)
                 file_name = os.path.join(path, f"{version.upper()}.json")
@@ -47,7 +62,7 @@ class ReverseData:
 
                 if not abort:
                     with open(file_name, "w", encoding="utf-8") as fp:
-                        fp.write(b_item.model_dump_json())
+                        fp.write(b_item.model_dump_json())  # indent=1
                     logger.info("Reverse %s done, file saved at %s", version, file_name)
             else:
                 logger.error("Bible version %s not found", version)

@@ -1,7 +1,7 @@
 import enum
 from typing import List, Optional
 
-from sqlalchemy import Column, Enum, ForeignKey, Integer, String, func, select
+from sqlalchemy import Column, Enum, ForeignKey, Integer, String, Text, func, select
 from sqlalchemy.orm import Mapped, column_property, relationship
 
 from app.db.base_class import Base
@@ -30,6 +30,7 @@ class Bible(Base):
     id = Column(Integer, primary_key=True, index=True)
     version = Column(String(128))
     description = Column(String(1024))
+    comment = Column(Text)
     year = Column(Integer)
     src = Column(String(1024))
     src_url = Column(String(1024))

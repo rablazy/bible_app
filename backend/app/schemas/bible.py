@@ -30,11 +30,11 @@ class BibleItem(BaseModel):
     id: Optional[int] = None
     version: str
     year: Optional[int] = None
-    src: str = None
-    description: str = None
-    src_url: Optional[str] = None
     lang: LanguageItem
-
+    src: Optional[str] = None
+    src_url: Optional[str] = None
+    description: str = None
+    comment: Optional[str] = None
     books: Optional[List["BookItem"]] = []
 
     # class Config:
@@ -46,10 +46,10 @@ class BookItemShort(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
     # id : int
+    rank: int
     name: str
     short_name: Optional[str] = None
     code: Optional[str] = None
-    rank: int
     category: str = None
     classification: Optional[str] = None
     bible_id: Optional[int] = None
@@ -90,17 +90,16 @@ class VerseItem(BaseModel):
         from_attributes=True,
     )  # ignored_types=["references"]
     # id : int
-    subtitle: Optional[Union[str, int, bytes]] = None
-    content: str
     rank: int
     rank_all: Optional[int] = None
     code: Optional[str] = None
-    # chapter_id : int
+    subtitle: Optional[Union[str, int, bytes]] = None
+    content: str
+    refs: Optional[str] = None
     chapter_rank: Optional[int] = None
     book_rank: Optional[int] = None
     book_name: Optional[str] = None
     book_short_name: Optional[str] = None
-    refs: Optional[str] = None
 
 
 class VerseItems(ListItems[VerseItem]):
