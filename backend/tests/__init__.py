@@ -31,19 +31,25 @@ def build_url(uri):
     return f"{pytest.MAIN_URL}/{pytest.BASE_URL}/{uri}"
 
 
-def get_url(client, uri, check_empty=True, to_dict=True):
+def get_url(client, uri, headers=None, check_empty=True, to_dict=True):
     url = build_url(uri)
+    if headers:
+        client.headers.update(headers)
     response = client.get(url)
     return standard_check(response, check_empty, to_dict=to_dict)
 
 
-def get_raw_url(client, uri):
+def get_raw_url(client, uri, headers=None):
     url = build_url(uri)
+    if headers:
+        client.headers.update(headers)
     return client.get(url)
 
 
-def delete_url(client, uri, assert_ok=True, to_dict=True) -> dict:
+def delete_url(client, uri, headers=None, assert_ok=True, to_dict=True) -> dict:
     url = build_url(uri)
+    if headers:
+        client.headers.update(headers)
     response = client.delete(url)
     if assert_ok:
         assert response.status_code == 200

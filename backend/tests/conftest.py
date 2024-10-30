@@ -23,6 +23,6 @@ def pytest_configure():
 
 @pytest.fixture()
 def client() -> Generator:
-    with TestClient(app) as client:
-        yield client
+    with TestClient(app, headers={"api-key": settings.SECRET_API_KEY_TEST}) as cli:
+        yield cli
         app.dependency_overrides = {}

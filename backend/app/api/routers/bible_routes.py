@@ -1,12 +1,20 @@
+import http
 import logging
-from typing import Annotated, List, Optional
+import os
+import pathlib
+from typing import Annotated, List, Optional, Union
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
+from fastapi.responses import HTMLResponse
+from fastapi.security import APIKeyHeader
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import and_, or_
 
 from app import crud
 from app.api import deps
+from app.api.routers.utils import set_query_parameter
+from app.core.config import settings
 from app.models.bible import Bible, Book, BookTypeEnum, Chapter, Verse
 from app.schemas.bible import (
     BibleItem,
@@ -18,8 +26,12 @@ from app.schemas.bible import (
 )
 
 logger = logging.getLogger(__name__)
+header_scheme = APIKeyHeader(name="api-key")
 
 router = APIRouter()
+
+BASE_PATH = pathlib.Path(__file__).resolve().parent.parent.parent
+TEMPLATES = Jinja2Templates(directory=str(BASE_PATH / "templates"))
 
 
 @router.get("/search/", status_code=200, response_model=ListItems[BibleItem])
@@ -151,6 +163,8 @@ def search_verses(
     translate_versions: List[str] = Query(None),
     offset: Annotated[int, Query(ge=0)] = 0,
     max_results: Annotated[int, Query(ge=1, le=100)] = 100,
+    to_html: bool = False,
+    request: Request,
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """Load on verse or multiple verses across chapters"""
@@ -237,17 +251,35 @@ def search_verses(
                 )
                 trans.append({"version": tv, "verses": qv})
 
-        return {
+        req_url = str(request.url)
+        next_offset = offset + max_results
+        previous_offset = offset - max_results
+        data = {
             "results": results,
             "count": len(results),
             "offset": offset,
             "total": q.count(),
             "trans": trans,
+            "more_url": set_query_parameter(
+                req_url, new_param_values={"offset": next_offset}
+            ),
+            "less_url": set_query_parameter(
+                req_url,
+                new_param_values={
+                    "offset": previous_offset if previous_offset > 0 else 0
+                },
+            ),
             "previous": base_q.filter(
                 Verse.rank_all == start_verse.rank_all - 1
             ).first(),
             "next": base_q.filter(Verse.rank_all == end_verse.rank_all + 1).first(),
         }
+
+        if to_html:
+            data.update({"request": request})
+            return TEMPLATES.TemplateResponse("verse.html", data)
+        else:
+            return data
 
     else:
         return {"results": []}
@@ -309,22 +341,33 @@ def search_text(
 
 
 @router.delete("/delete/id/{bid}")
-def delete_bible_by_id(bid: int, db: Session = Depends(deps.get_db)):
+def delete_bible_by_id(
+    bid: int, db: Session = Depends(deps.get_db), key: str = Depends(header_scheme)
+):
     """Delete bible by id"""
     try:
-        crud.bible.delete_by_id(db, bid)
-        return {"msg": "Successfully deleted."}
+        if key == settings.SECRET_API_KEY:
+            crud.bible.delete_by_id(db, bid)
+            return {"msg": "Successfully deleted."}
+        else:
+            raise HTTPException(status_code=403, detail="Bad key supplied")
     except ValueError:
         raise HTTPException(status_code=404, detail=f"Bible with id {bid} not found")
 
 
 @router.delete("/delete/version/{version}")
-def delete_bible_by_version(version: str, db: Session = Depends(deps.get_db)):
+def delete_bible_by_version(
+    version: str, db: Session = Depends(deps.get_db), key: str = Depends(header_scheme)
+):
     """Delete bible by version name"""
-    bible = crud.bible.query_by_version(db, version).first()
-    if not bible:
-        raise HTTPException(
-            status_code=404, detail=f"Bible version {version} not found"
-        )
-    crud.bible.delete_by_id(db, bible.id)
-    return {"msg": "Successfully deleted."}
+    if key == settings.SECRET_API_KEY:
+        bible = crud.bible.query_by_version(db, version).first()
+        if bible:
+            crud.bible.delete_by_id(db, bible.id)
+            return {"msg": "Successfully deleted."}
+        else:
+            raise HTTPException(
+                status_code=404, detail=f"Bible version {version} not found"
+            )
+    else:
+        raise HTTPException(status_code=403, detail="Bad key supplied")

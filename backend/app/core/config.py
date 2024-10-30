@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     API_TITLE: str = "choir_api"
     API_VERSION: str = "/api/v1"
     DATABASE_URL: str = ""  # sqlite:///app.db
+    SECRET_API_KEY: str = ""
+    SECRET_API_KEY_TEST: str = ""
 
     # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
     # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
