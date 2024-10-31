@@ -11,7 +11,7 @@ def set_query_parameter(url, new_param_values: dict):
     """
     scheme, netloc, path, query_string, fragment = urlsplit(url)
     query_params = parse_qs(query_string)
-    print(query_params)
+    # print(query_params)
 
     for param_name, param_value in new_param_values.items():
         if param_value is None:

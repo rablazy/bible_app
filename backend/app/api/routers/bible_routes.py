@@ -147,7 +147,7 @@ def get_chapter(
 
 
 @router.get(
-    "/{version}/verses/{from_book_code}/{from_chapter}/{from_verse}",
+    "/{version}/verses/{from_book_code}",  # /{from_chapter}/{from_verse}
     status_code=200,
     response_model=VerseItems,
 )
@@ -155,12 +155,13 @@ def search_verses(
     *,
     version: str,
     from_book_code: str,
-    from_chapter: Annotated[int, Path(ge=1)],
-    from_verse: Annotated[int, Path(ge=1)],
+    from_chapter: Annotated[int, Query(ge=1)] = None,
+    from_verse: Annotated[int, Query(ge=1)] = 1,
     to_book_code: Optional[str] = None,
     to_chapter: Optional[int] = None,
     to_verse: Optional[int] = None,
     translate_versions: List[str] = Query(None),
+    mix_trans: bool = False,
     offset: Annotated[int, Query(ge=0)] = 0,
     max_results: Annotated[int, Query(ge=1, le=100)] = 100,
     to_html: bool = False,
@@ -181,8 +182,8 @@ def search_verses(
         to_book_code = from_book_code
         to_book = from_book
 
+    dest_book = db.query(Book).filter(Book.code.ilike(to_book_code)).first()
     if not to_book_code == from_book_code:
-        dest_book = db.query(Book).filter(Book.code.ilike(to_book_code)).first()
         to_book = dest_book.rank if dest_book else -1
 
     if to_book < from_book:
@@ -192,10 +193,14 @@ def search_verses(
         )
 
     if to_chapter is None:
-        if from_book == to_book:
-            to_chapter = from_chapter
-        else:
+        if from_chapter is None:
+            from_chapter = 1
             to_chapter = max([c.rank for c in dest_book.chapters])
+        else:
+            if from_book == to_book:
+                to_chapter = from_chapter
+            else:
+                to_chapter = max([c.rank for c in dest_book.chapters])
 
     if from_book == to_book and to_chapter < from_chapter:
         raise HTTPException(
@@ -203,86 +208,95 @@ def search_verses(
             detail="<to_chapter> param should be greater than <from_chapter>",
         )
 
-    qf = crud.verse.query_by_version(db, version)
+    if not translate_versions:
+        translate_versions = []
+    try:
+        translate_versions.remove(version)
+    except (ValueError, AttributeError):
+        pass
+    translate_versions.insert(0, version)
 
-    start_verse = qf.filter(
-        and_(
-            Book.rank == from_book,
-            Chapter.rank == from_chapter,
-            Verse.rank == from_verse,
-        )
-    ).first()
-    if to_verse is not None and to_verse > 0:
-        end_verse = qf.filter(
+    results = []
+    trans = []
+    total = 0
+    for vers in translate_versions:
+        qf = crud.verse.query_by_version(db, vers)
+
+        start_verse = qf.filter(
             and_(
-                Book.rank == to_book, Chapter.rank == to_chapter, Verse.rank == to_verse
+                Book.rank == from_book,
+                Chapter.rank == from_chapter,
+                Verse.rank == from_verse,
             )
         ).first()
-    else:
-        qf = qf.filter(Book.rank == to_book)
-        if to_chapter is not None and to_chapter > 0:
-            qf = qf.filter(Chapter.rank == to_chapter)
-        end_verse = qf.order_by(Verse.rank_all.desc()).first()
-
-    if start_verse and end_verse:
-        print(f"start_verse : {start_verse} , end_verse: {end_verse}")
-        base_q = crud.verse.query_by_version(db, version)
-        q = base_q.filter(
-            Verse.rank_all >= start_verse.rank_all, Verse.rank_all <= end_verse.rank_all
-        )
-        results = list(
-            q.order_by(Verse.rank_all).offset(offset).limit(max_results).all()
-        )
-
-        try:
-            translate_versions.remove(version)
-        except (ValueError, AttributeError):
-            pass
-
-        trans = []
-        if results and translate_versions:
-            verse_codes = [verse.code for verse in results]
-            for tv in translate_versions:
-                qv = (
-                    crud.verse.query_by_version(db, tv)
-                    .filter(Verse.code.in_(verse_codes))
-                    .order_by(Verse.rank_all)
-                    .all()
+        if to_verse is not None and to_verse > 0:
+            end_verse = qf.filter(
+                and_(
+                    Book.rank == to_book,
+                    Chapter.rank == to_chapter,
+                    Verse.rank == to_verse,
                 )
-                trans.append({"version": tv, "verses": qv})
-
-        req_url = str(request.url)
-        next_offset = offset + max_results
-        previous_offset = offset - max_results
-        data = {
-            "results": results,
-            "count": len(results),
-            "offset": offset,
-            "total": q.count(),
-            "trans": trans,
-            "more_url": set_query_parameter(
-                req_url, new_param_values={"offset": next_offset}
-            ),
-            "less_url": set_query_parameter(
-                req_url,
-                new_param_values={
-                    "offset": previous_offset if previous_offset > 0 else 0
-                },
-            ),
-            "previous": base_q.filter(
-                Verse.rank_all == start_verse.rank_all - 1
-            ).first(),
-            "next": base_q.filter(Verse.rank_all == end_verse.rank_all + 1).first(),
-        }
-
-        if to_html:
-            data.update({"request": request})
-            return TEMPLATES.TemplateResponse("verse.html", data)
+            ).first()
         else:
-            return data
+            qf = qf.filter(Book.rank == to_book)
+            if to_chapter is not None and to_chapter > 0:
+                qf = qf.filter(Chapter.rank == to_chapter)
+            end_verse = qf.order_by(Verse.rank_all.desc()).first()
 
+        if start_verse and end_verse:
+            print(f"start_verse : {start_verse} , end_verse: {end_verse}")
+            base_q = crud.verse.query_by_version(db, vers)
+            q = base_q.filter(
+                Verse.rank_all >= start_verse.rank_all,
+                Verse.rank_all <= end_verse.rank_all,
+            )
+            res = q.order_by(Verse.rank_all).offset(offset).limit(max_results).all()
+            if mix_trans or vers == version:
+                results.extend(res)
+                total = max(
+                    total, q.count()
+                )  # number of verses may differ per translation
+            else:
+                trans.append({"version": vers, "verses": res})
+
+    if mix_trans:
+        results.sort(key=lambda x: (x.book_rank, x.chapter_rank, x.rank))
+
+    data = {
+        "results": results,
+        "count": len(results),
+        "offset": offset,
+        "total": total,
+        "trans": trans,
+        "more_url": set_query_parameter(
+            str(request.url),
+            new_param_values={"offset": offset + max_results},
+        )
+        if results
+        else None,
+        "less_url": set_query_parameter(
+            str(request.url),
+            new_param_values={"offset": offset - max_results},
+        )
+        if offset > 0
+        else None,
+    }
+
+    if results:
+        data.update(
+            {
+                "previous": base_q.filter(
+                    Verse.rank_all == start_verse.rank_all - 1
+                ).first(),
+                "next": base_q.filter(Verse.rank_all == end_verse.rank_all + 1).first(),
+            }
+        )
+
+    if to_html:
+        data.update({"request": request})
+        return TEMPLATES.TemplateResponse("verse.html", data)
     else:
-        return {"results": []}
+        return data
 
 
 @router.get(

@@ -1,7 +1,9 @@
 import logging
+import random
 
 import pytest
 
+from app.db.start.constants import BOOK_CODES, CHAPTER_VERSES_COUNT_MG
 from app.models.bible import BookTypeEnum
 from tests import delete_url, get_raw_url, get_url
 
@@ -83,12 +85,14 @@ def test_search_books_by_name_code(client):
 
 def test_get_verse_errors(client):
     response = get_raw_url(
-        client, f"{MG_VERSION}/verses/rev_/2/1?to_book_code=mat_&to_verse=4"
+        client,
+        f"{MG_VERSION}/verses/rev_?from_chapter=2&from_verse=1&to_book_code=mat_&to_verse=4",
     )
     assert response.status_code == 400
 
     response = get_raw_url(
-        client, f"{MG_VERSION}/verses/rev_/2/1?to_chapter=1&to_verse=4"
+        client,
+        f"{MG_VERSION}/verses/rev_?from_chapter=2&from_verse=1&to_chapter=1&to_verse=4",
     )
     assert response.status_code == 400
 
@@ -96,7 +100,8 @@ def test_get_verse_errors(client):
 def test_get_verse_translate(client):
     get_url(client, "search?version=kjv")
     data = get_url(
-        client, f"{MG_VERSION}/verses/mat_/5/1?to_verse=3&translate_versions=kjv"
+        client,
+        f"{MG_VERSION}/verses/mat_?from_chapter=5&from_verse=1&to_verse=3&translate_versions=kjv",
     )
     assert len(data.results) == 3
     assert len(data.trans) == 1
@@ -106,7 +111,10 @@ def test_get_verse_translate(client):
 
 
 def test_get_verse_same_chapter_set(client):
-    data = get_url(client, f"{MG_VERSION}/verses/rev_/15/1?to_chapter=17&to_verse=3")
+    data = get_url(
+        client,
+        f"{MG_VERSION}/verses/rev_?from_chapter=15&from_verse=1&to_chapter=17&to_verse=3",
+    )
     first_verse = data.results[0]
     assert first_verse.chapter_rank == 15
     assert first_verse.subtitle is not None
@@ -118,7 +126,9 @@ def test_get_verse_same_chapter_set(client):
 
 
 def test_get_verse_same_chapter_notset(client):
-    data = get_url(client, f"{MG_VERSION}/verses/psa_/93/2?to_verse=4")
+    data = get_url(
+        client, f"{MG_VERSION}/verses/psa_?from_chapter=93&from_verse=2&to_verse=4"
+    )
     assert len(data.results) == 3
     first_verse = data.results[0]
     assert first_verse.chapter_rank == 93
@@ -132,23 +142,28 @@ def test_get_verse_same_chapter_notset(client):
 
 
 def test_get_all_verses_in_chapter(client):
-    data = get_url(client, f"{MG_VERSION}/verses/psa_/91/1")
+    data = get_url(client, f"{MG_VERSION}/verses/psa_/?from_chapter=91&from_verse=1&")
     assert len(data.results) == 16
 
 
 def test_get_verse_across_chapters(client):
-    data = get_url(client, f"{MG_VERSION}/verses/psa_/91/1?to_chapter=93")
+    data = get_url(
+        client, f"{MG_VERSION}/verses/psa_/?from_chapter=91&from_verse=1&to_chapter=93"
+    )
     assert len(data.results) == 36
     assert data.count == 36
 
-    data = get_url(client, f"{MG_VERSION}/verses/psa_/91/2?to_chapter=94&to_verse=3")
+    data = get_url(
+        client,
+        f"{MG_VERSION}/verses/psa_/?from_chapter=91&from_verse=2&to_chapter=94&to_verse=3",
+    )
     assert len(data.results) == 38
 
 
 def test_get_verse_across_books(client):
     data = get_url(
         client,
-        f"{MG_VERSION}/verses/mat_/28/1?to_book_code=mar_&to_chapter=2&to_verse=5",
+        f"{MG_VERSION}/verses/mat_/?from_chapter=28&from_verse=1&to_book_code=mar_&to_chapter=2&to_verse=5",
     )
     assert len(data.results) == 70
     assert data.count == 70
@@ -160,7 +175,7 @@ def test_get_verse_across_books(client):
 
     data = get_url(
         client,
-        f"{MG_VERSION}/verses/mat_/1/1?to_book=mar_&to_chapter=2&to_verse=5",
+        f"{MG_VERSION}/verses/mat_/?from_chapter=1&from_verse=1&to_book=mar_&to_chapter=2&to_verse=5",
     )
     assert data.previous.rank == 24
     assert data.previous.chapter_rank == 3
@@ -171,7 +186,10 @@ def test_get_verse_across_books(client):
 
 def test_count_verses(client):
     """count all verses of new testament and overall"""
-    data = get_url(client, f"{MG_VERSION}/verses/mat_/1/1?to_book_code=rev_")
+    data = get_url(
+        client,
+        f"{MG_VERSION}/verses/mat_/?from_chapter=1&from_verse=1&to_book_code=rev_",
+    )
     assert len(data.results) == 100
     assert data.total == 7958
 
@@ -183,7 +201,7 @@ def test_count_verses(client):
 def test_get_all_verses_limit_set(client):
     data = get_url(
         client,
-        f"{MG_VERSION}/verses/mat_/1/1?to_book_code=rev_&offset=100&max_results=25",
+        f"{MG_VERSION}/verses/mat_/?from_chapter=1&from_verse=1&to_book_code=rev_&offset=100&max_results=25",
     )
     assert len(data.results) == 25
     assert data.total == 7958
@@ -193,9 +211,18 @@ def test_get_all_verses_limit_set(client):
 
 def test_get_verse_empty(client):
     data = get_url(
-        client, f"{MG_VERSION}/verses/col_/2/25?to_verse=26", check_empty=False
+        client,
+        f"{MG_VERSION}/verses/col_/?from_chapter=2&from_verse=25&to_verse=26",
+        check_empty=False,
     )
     assert len(data.results) == 0
+
+
+def test_get_verses_of_full_book(client):
+    indexes = random.sample(list(BOOK_CODES.keys()), 5)
+    for i in indexes:
+        data = get_url(client, f"{MG_VERSION}/verses/{BOOK_CODES.get(i)}")
+        assert data.total == CHAPTER_VERSES_COUNT_MG.get(i).get("verses")
 
 
 def test_search_text(client):

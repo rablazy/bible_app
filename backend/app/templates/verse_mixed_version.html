@@ -1,0 +1,27 @@
+<div class="scripture">
+    {% set ns = namespace(last_chapter=0, last_book=0, last_code="", same=False) %}
+    {% for verse in results %}
+      {% if (verse.chapter_rank != ns.last_chapter or verse.book_rank != ns.last_book) %}
+        <div class="verse-indicator" id="verse-indicator">
+          <span class="verse-info" id="verse-info">
+            {{verse.book_name}} {{verse.chapter_rank}}
+          </span>
+        </div>
+      {% endif %}
+      {% set same = (verse.code == ns.last_code)%}
+      {% set ns.last_chapter = verse.chapter_rank %}
+      {% set ns.last_book = verse.book_rank %}
+      {% set ns.last_code = verse.code %}
+      <div class="verse-text {%if same %}trans{% endif %}" id="verse-text">
+        {% if verse.subtitle %}
+        <p class="subtitle">{{verse.subtitle}}</p>
+        {% endif %}
+        <p class="verse-content {%if same %}trans{% endif %}">
+        <span class="verse-num">{{"%3s"|format(verse.rank)}}.&nbsp;</span>
+        <span class="verse">{{verse.content}}</span>
+        </p>
+      </div>
+
+    {% endfor %}
+
+  </div>

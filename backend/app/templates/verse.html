@@ -60,7 +60,23 @@
       white-space: pre;
     }*/
 
-    #viewless {
+    .trans {
+
+    }
+
+    .trans .verse-num {
+      color: white !important;
+    }
+
+    .trans .verse {
+      font-size: 2.3vmin !important;
+    }
+
+    .trans .subtitle {
+      font-size: 2.6vmin !important;
+    }
+
+    .viewlink {
       margin: 2%;
     }
 
@@ -68,19 +84,27 @@
   </head>
 <body>
   <div class="container">
-    {% include 'verse_version.html' %}
-    {% for tr in trans %}
-      {% with results=tr.verses %}
-        {% include  'verse_version.html' %}
-      {% endwith %}
-    {% endfor%}
+    {% if trans %}
+      {% include 'verse_version.html' %}
+      {% for tr in trans %}
+        {% with results=tr.verses %}
+          {% include  'verse_version.html' %}
+        {% endwith %}
+      {% endfor%}
+    {% else %}
+      {% include 'verse_mixed_version.html' %}
+    {% endif %}
   </div>
-  <a id="viewless" href="{{less_url}}">
-    Read less
-  </a>
-  <a id="viewmore" href="{{more_url}}">
-    Read more
-  </a>
+  {% if less_url %}
+    <a class="viewlink" id="viewless" href="{{less_url}}">
+      Read less
+    </a>
+  {% endif %}
+  {% if more_url %}
+    <a class="viewlink" id="viewmore" href="{{more_url}}">
+      Read more
+    </a>
+  {% endif %}
 
 </body>
 
