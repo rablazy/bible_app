@@ -25,7 +25,7 @@ def set_query_parameter(url, new_param_values: dict):
 
 
 def parse_bible_ref(references: str):
-    pattern = "(?P<book>\d{0,1}\s?\w+)(\s|.)?((?P<chapter>\d+((–|-)\d+)?)(:(?P<verse>(,?\d+((–|-)\d+)?)+))?)?"
+    pattern = r"(?P<book>\d{0,1}\s?\w+)(\s|.)?((?P<chapter>\d+((–|-)\d+)?)(:(?P<verse>(,?\d+((–|-)\d+)?)+))?)?"
     res = []
     parts = references.split(";")
 
