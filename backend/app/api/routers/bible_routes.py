@@ -13,7 +13,7 @@ from sqlalchemy.sql import and_, or_
 
 from app import crud
 from app.api import deps
-from app.api.routers.utils import set_query_parameter
+from app.api.routers.utils import parse_bible_ref, set_query_parameter
 from app.core.config import settings
 from app.models.bible import Bible, Book, BookTypeEnum, Chapter, Verse
 from app.schemas.bible import (
@@ -22,7 +22,9 @@ from app.schemas.bible import (
     ChapterItem,
     ChapterItemNoVerses,
     ListItems,
+    VerseItem,
     VerseItems,
+    VerseReferences,
 )
 
 logger = logging.getLogger(__name__)
@@ -385,3 +387,58 @@ def delete_bible_by_version(
             )
     else:
         raise HTTPException(status_code=403, detail="Bad key supplied")
+
+
+@router.get(
+    "/{version}/verses_ref",
+    status_code=200,
+    response_model=VerseReferences,
+)
+def search_references(
+    *,
+    version: str,
+    references: str,
+    # to_html: bool = False,
+    # request: Request,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    refs = parse_bible_ref(references)
+    results = []
+    for ref in refs:
+        qf = crud.verse.query_by_version(db, version)
+        book_name = ref["book"]
+        chapter_rank = ref["chapter"]
+        q = qf.filter(
+            or_(
+                Book.name.ilike(book_name),
+                Book.short_name.ilike(book_name),
+                Book.code.ilike(book_name),
+            )
+        ).filter(Chapter.rank == chapter_rank)
+
+        verse_range = ref["verses"]
+        if verse_range:
+            for verse in verse_range:
+                interval = verse.split("-")
+                if len(interval) == 1:
+                    qv = q.filter(Verse.rank == interval[0].strip())
+                else:
+                    qv = q.filter(
+                        Verse.rank >= interval[0].strip(),
+                        Verse.rank <= interval[1].strip(),
+                    )
+                results.append(
+                    {
+                        "reference": f"{book_name} {chapter_rank}:{verse}",
+                        "verses": qv.all(),
+                    }
+                )
+        else:
+            results.append(
+                {
+                    "reference": f"{book_name} {chapter_rank}",
+                    "verses": q.all(),
+                }
+            )
+
+    return {"results": results}

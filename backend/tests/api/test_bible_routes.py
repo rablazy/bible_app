@@ -1,5 +1,6 @@
 import logging
 import random
+import urllib.parse
 
 import pytest
 
@@ -223,6 +224,29 @@ def test_get_verses_of_full_book(client):
     for i in indexes:
         data = get_url(client, f"{MG_VERSION}/verses/{BOOK_CODES.get(i)}")
         assert data.total == CHAPTER_VERSES_COUNT_MG.get(i).get("verses")
+
+
+def test_get_verse_references(client):
+    refs = "Apo.5:1,4-5,17,21; act_ 5:15-20,25; 10:12"
+    data = get_url(
+        client, f"{MG_VERSION}/verses_ref?references={urllib.parse.quote_plus(refs)}"
+    )
+    assert len(data.results) == 7
+    verse_2 = data.results[1]
+    assert len(verse_2.verses) == 2
+    assert verse_2.verses[1].code == "rev_.05.05"
+    assert len(data.results[2].verses) == 0  # inexistant verse
+    assert len(data.results[3].verses) == 0  # inexistant verse
+    assert data.results[-1].verses[0].code == "act_.10.12"
+
+    refs = "Salamo 23;Sal 24"
+    data = get_url(
+        client, f"{MG_VERSION}/verses_ref?references={urllib.parse.quote_plus(refs)}"
+    )
+    assert len(data.results) == 2
+    assert len(data.results[0].verses) == 6
+    assert data.results[0].reference == "Salamo 23"
+    assert len(data.results[1].verses) == 10
 
 
 def test_search_text(client):

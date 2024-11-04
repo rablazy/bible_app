@@ -1,4 +1,4 @@
-from typing import Generic, List, Optional, Sequence, TypeVar, Union
+from typing import Dict, Generic, List, Optional, Sequence, TypeVar, Union
 
 from pydantic import BaseModel, ConfigDict
 
@@ -115,6 +115,17 @@ class VerseTransItems(BaseModel):
 
     version: str
     verses: Optional[List[VerseItem]] = []
+
+
+class VerseReference(BaseModel):
+    reference: str
+    verses: List[VerseItem]
+
+
+class VerseReferences(BaseModel):
+    """Pydantic generic model for items in list"""
+
+    results: List[VerseReference]
 
 
 BibleItem.model_rebuild()
