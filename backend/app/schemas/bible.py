@@ -122,10 +122,14 @@ class VerseReference(BaseModel):
     verses: List[VerseItem]
 
 
-class VerseReferences(BaseModel):
-    """Pydantic generic model for items in list"""
+class VerseReferenceTransItems(BaseModel):
+    version: str
+    verses: Optional[List[VerseReference]] = []
 
+
+class VerseReferences(BaseModel):
     results: List[VerseReference]
+    trans: Optional[List[VerseReferenceTransItems]] = []
 
 
 BibleItem.model_rebuild()

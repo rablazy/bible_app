@@ -32,22 +32,23 @@ def parse_bible_ref(references: str):
     last_book = None
     for part in parts:
         part = part.strip()
-        match = None
-        if not re.search(r"[a-zA-Z]", part) and last_book is not None:
-            part = f"{last_book} {part}"
+        if part:
+            match = None
+            if not re.search(r"[a-zA-Z]", part) and last_book is not None:
+                part = f"{last_book} {part}"
 
-        for match in re.finditer(pattern, part):
-            book = match["book"].strip() if match["book"] else None
-            last_book = book
-            chapter = match["chapter"].strip() if match["chapter"] else None
-            verses = match["verse"].split(",") if match["verse"] else None
-            res.append(
-                {
-                    "ref": part.strip(),
-                    "book": book,
-                    "chapter": chapter,
-                    "verses": verses,
-                }
-            )
+            for match in re.finditer(pattern, part):
+                book = match["book"].strip() if match["book"] else None
+                last_book = book
+                chapter = match["chapter"].strip() if match["chapter"] else None
+                verses = match["verse"].split(",") if match["verse"] else None
+                res.append(
+                    {
+                        "ref": part,
+                        "book": book,
+                        "chapter": chapter,
+                        "verses": verses,
+                    }
+                )
 
     return res

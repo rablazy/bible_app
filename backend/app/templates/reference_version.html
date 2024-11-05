@@ -1,0 +1,26 @@
+<div class="scripture">
+    {% for res in results %}
+
+    <p>
+        <span class="verse-info"><i class="fa fa-book" style="font-size:24px"></i>&nbsp;<b>{{res.reference}}</b></span>
+        <div class="verse-text" id="verse-text">
+        {% if res.verses %}
+        {% for verse in res.verses %}
+            <div>
+                {% if verse.subtitle %}
+                <p class="subtitle">{{verse.subtitle}}</p>
+                {% endif %}
+                <p class="verse-content">
+                    <span class="verse-num">{{"%3s"|format(verse.rank)}}.&nbsp;</span>
+                    <span class="verse">{{verse.content}}</span>
+                </p>
+            </div>
+        {% endfor %}
+        {% else %}
+            <p class="notfound"><i class="fa fa-times" style="font-size:24px"></i></p>
+        {% endif %}
+        </div>
+    </p>
+
+    {% endfor %}
+    </div>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Font Awesome Icons</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <style type="text/css">
+      .container {
+        display: flex;
+      }
+
+      .scripture {
+        flex: 1;
+        padding-left: 1.5%;
+        padding-right: 1.5%;
+        vertical-align: middle;
+      }
+
+      .verse-info {
+        justify-content: flex-end;
+        font-size: 3vmin;
+        color: white;
+        background: rgba(143, 192, 199, 1);
+        padding: 1vmin;
+        border-radius: 2.5vmin;
+      }
+
+      .verse-text {
+        padding-bottom: 0.1em;
+      }
+
+      .subtitle {
+        font-size: 3.2vmin;
+        color: #75acb4;
+        margin-bottom: 0.2%;
+        font-style: italic;
+      }
+
+      .verse-num {
+        font-size: 2.8vmin;
+        color: #4d759a;
+        text-align: center;
+        position: relative;
+      }
+
+      .verse {
+        font-size: 3vmin;
+        line-height: auto;
+        color: #4a4a4a;
+      }
+
+      .notfound {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      {% include 'reference_version.html' %}
+      {% for tr in trans %}
+      {% with results=tr.references %}
+        {% include 'reference_version.html' %}
+      {% endwith
+      %} {% endfor%}
+    </div>
+  </body>
+</html>

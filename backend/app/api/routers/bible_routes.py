@@ -307,8 +307,9 @@ def search_references(
     *,
     version: str,
     references: str,
-    # to_html: bool = False,
-    # request: Request,
+    translate_versions: List[str] = Query(None),
+    to_html: bool = False,
+    request: Request,
     db: Session = Depends(deps.get_db),
 ) -> dict:
     """Search one or multiple references using common format:<br/>
@@ -321,46 +322,78 @@ def search_references(
 
     """
     refs = parse_bible_ref(references)
-    results = []
-    for ref in refs:
-        qf = crud.verse.query_by_version(db, version)
-        logger.info(ref)
-        book_name = ref["book"]
-        chapter_rank = ref["chapter"]
-        q = qf.filter(
-            or_(
-                Book.name.ilike(book_name),
-                Book.short_name.ilike(book_name),
-                Book.code.ilike(book_name),
-            )
-        ).filter(Chapter.rank == chapter_rank)
 
-        verse_range = ref["verses"]
-        if verse_range:
-            for verse in verse_range:
-                interval = verse.split("-")
-                if len(interval) == 1:
-                    qv = q.filter(Verse.rank == interval[0].strip())
-                else:
-                    qv = q.filter(
-                        Verse.rank >= interval[0].strip(),
-                        Verse.rank <= interval[1].strip(),
+    if not translate_versions:
+        translate_versions = []
+    try:
+        translate_versions.remove(version)
+    except (ValueError, AttributeError):
+        pass
+    translate_versions.insert(0, version)
+
+    results = []
+    trans = []
+    for vers in translate_versions:
+        verses = []
+        book_q = crud.book.query_by_version(db, vers)
+        for ref in refs:
+            q = crud.verse.query_by_version(db, vers)
+            print(ref)
+            book_name = ref["book"]
+            chapter_rank = ref["chapter"]
+            if vers == version:
+                book = book_q.filter(
+                    or_(
+                        Book.name.ilike(book_name),
+                        Book.short_name.ilike(book_name),
+                        Book.code.ilike(book_name),
                     )
-                results.append(
-                    {
-                        "reference": f"{book_name} {chapter_rank}:{verse}",
+                ).first()
+                ref["book_code"] = book.code if book else "-1"
+            else:
+                book = book_q.filter(Book.code == ref.get("book_code", "-1")).first()
+
+            q = q.filter(Chapter.rank == chapter_rank, Chapter.book == book)
+
+            verse_range = ref["verses"]
+            if verse_range:
+                for verse in verse_range:
+                    interval = verse.split("-")
+                    if len(interval) == 1:
+                        qv = q.filter(Verse.rank == interval[0].strip())
+                    else:
+                        qv = q.filter(
+                            Verse.rank >= interval[0].strip(),
+                            Verse.rank <= interval[1].strip(),
+                        )
+                    item = {
+                        "reference": f"{book.short_name if book else book_name} {chapter_rank}:{verse}",
                         "verses": qv.all(),
                     }
-                )
-        else:
-            results.append(
-                {
-                    "reference": f"{book_name} {chapter_rank}",
+                    if vers == version:  # mix_trans or
+                        results.append(item)
+                    else:
+                        verses.append(item)
+            else:
+                item = {
+                    "reference": f"{book.short_name if book else book_name} {chapter_rank}",
                     "verses": q.all(),
                 }
-            )
+                if vers == version:  # mix_trans or
+                    results.append(item)
+                else:
+                    verses.append(item)
 
-    return {"results": results}
+        if vers != version:
+            trans.append({"version": vers, "references": verses})
+
+    data = {"results": results, "trans": trans}
+
+    if to_html:
+        data.update({"request": request})
+        return TEMPLATES.TemplateResponse("references.html", data)
+    else:
+        return data
 
 
 @router.get(
