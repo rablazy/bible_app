@@ -87,7 +87,7 @@ def test_search_books_by_name_code(client):
 def test_get_verse_errors(client):
     response = get_raw_url(
         client,
-        f"{MG_VERSION}/verses/rev_?from_chapter=2&from_verse=1&to_book_code=mat_&to_verse=4",
+        f"{MG_VERSION}/verses/rev_?from_chapter=2&from_verse=1&to_book=mat_&to_verse=4",
     )
     assert response.status_code == 400
 
@@ -164,7 +164,7 @@ def test_get_verse_across_chapters(client):
 def test_get_verse_across_books(client):
     data = get_url(
         client,
-        f"{MG_VERSION}/verses/mat_/?from_chapter=28&from_verse=1&to_book_code=mar_&to_chapter=2&to_verse=5",
+        f"{MG_VERSION}/verses/mat_/?from_chapter=28&from_verse=1&to_book=mar_&to_chapter=2&to_verse=5",
     )
     assert len(data.results) == 70
     assert data.count == 70
@@ -189,12 +189,12 @@ def test_count_verses(client):
     """count all verses of new testament and overall"""
     data = get_url(
         client,
-        f"{MG_VERSION}/verses/mat_/?from_chapter=1&from_verse=1&to_book_code=rev_",
+        f"{MG_VERSION}/verses/mat_/?from_chapter=1&from_verse=1&to_book=rev_",
     )
     assert len(data.results) == 100
     assert data.total == 7958
 
-    # data = get_url(client, f"{MG_VERSION}/verses/gen_/1?from_verse=1&to_book_code=rev_")
+    # data = get_url(client, f"{MG_VERSION}/verses/gen_/1?from_verse=1&to_book=rev_")
     # assert len(data.results) == 100
     # assert data.total == 31102
 
@@ -202,7 +202,7 @@ def test_count_verses(client):
 def test_get_all_verses_limit_set(client):
     data = get_url(
         client,
-        f"{MG_VERSION}/verses/mat_/?from_chapter=1&from_verse=1&to_book_code=rev_&offset=100&max_results=25",
+        f"{MG_VERSION}/verses/mat_/?from_chapter=1&from_verse=1&to_book=rev_&offset=100&max_results=25",
     )
     assert len(data.results) == 25
     assert data.total == 7958
@@ -247,6 +247,14 @@ def test_get_verse_references(client):
     assert len(data.results[0].verses) == 6
     assert data.results[0].reference == "Salamo 23"
     assert len(data.results[1].verses) == 10
+
+    refs = "Apo.5:1,4-5; act_ 5:15-20,25; 10:12;Jaona 3:16;Sal 23;1 Jaona 3:16-19,22;3jao 1.2"
+    data = get_url(
+        client, f"{MG_VERSION}/verses_ref?references={urllib.parse.quote_plus(refs)}"
+    )
+    assert len(data.results) == 10
+    for res in data.results:
+        assert len(res.verses) > 0
 
 
 def test_search_text(client):

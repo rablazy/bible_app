@@ -25,15 +25,16 @@ def set_query_parameter(url, new_param_values: dict):
 
 
 def parse_bible_ref(references: str):
-    pattern = r"(?P<book>\d{0,1}\s?\w+)(\s|.)?((?P<chapter>\d+((–|-)\d+)?)(:(?P<verse>(,?\d+((–|-)\d+)?)+))?)?"
+    pattern = r"(?P<book>\d{0,1}\s?\w+)(\s|.)?((?P<chapter>\d+((–|-)\d+)?)((:|.)(?P<verse>(,?\d+((–|-)\d+)?)+))?)?"
     res = []
     parts = references.split(";")
 
     last_book = None
     for part in parts:
+        part = part.strip()
         match = None
         if not re.search(r"[a-zA-Z]", part) and last_book is not None:
-            part = last_book + part
+            part = f"{last_book} {part}"
 
         for match in re.finditer(pattern, part):
             book = match["book"].strip() if match["book"] else None

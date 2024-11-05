@@ -68,6 +68,19 @@ class CRUDBook(CRUDBibleItem[Book]):
     def query_by_version(self, db: Session, version):
         return db.query(Book).join(Bible).filter(Bible.version.ilike(version))
 
+    def query_by_name_or_code(self, db: Session, identifier: str):
+        return (
+            db.query(Book)
+            .filter(
+                or_(
+                    Book.name.ilike(identifier),
+                    Book.short_name.ilike(identifier),
+                    Book.code.ilike(identifier),
+                )
+            )
+            .first()
+        )
+
 
 class CRUDChapter(CRUDBibleItem[Chapter]):
     def query_by_version(self, db: Session, version):

@@ -149,17 +149,17 @@ def get_chapter(
 
 
 @router.get(
-    "/{version}/verses/{from_book_code}",  # /{from_chapter}/{from_verse}
+    "/{version}/verses/{from_book}",  # /{from_chapter}/{from_verse}
     status_code=200,
     response_model=VerseItems,
 )
 def search_verses(
     *,
     version: str,
-    from_book_code: str,
+    from_book: str,
     from_chapter: Annotated[int, Query(ge=1)] = None,
     from_verse: Annotated[int, Query(ge=1)] = 1,
-    to_book_code: Optional[str] = None,
+    to_book: Optional[str] = None,
     to_chapter: Optional[int] = None,
     to_verse: Optional[int] = None,
     translate_versions: List[str] = Query(None),
@@ -172,23 +172,20 @@ def search_verses(
 ) -> dict:
     """Load on verse or multiple verses across chapters"""
 
-    start_book = (
-        db.query(Book).filter(Book.code.ilike(from_book_code)).first()
-        if from_book_code
-        else None
-    )
-    from_book = start_book.rank if start_book else -1
+    start_book = crud.book.query_by_name_or_code(db, from_book) if from_book else None
+    f_book = start_book.rank if start_book else -1
 
-    to_book = -1
-    if to_book_code is None:
-        to_book_code = from_book_code
+    t_book = -1
+    if to_book is None:
         to_book = from_book
+        t_book = f_book
 
-    dest_book = db.query(Book).filter(Book.code.ilike(to_book_code)).first()
-    if not to_book_code == from_book_code:
-        to_book = dest_book.rank if dest_book else -1
+    dest_book = crud.book.query_by_name_or_code(db, to_book)
 
-    if to_book < from_book:
+    if not to_book == from_book:
+        t_book = dest_book.rank if dest_book else -1
+
+    if t_book < f_book:
         raise HTTPException(
             status_code=400,
             detail="<to_book> param should be greater than <from_book>",
@@ -199,12 +196,12 @@ def search_verses(
             from_chapter = 1
             to_chapter = max([c.rank for c in dest_book.chapters])
         else:
-            if from_book == to_book:
+            if f_book == t_book:
                 to_chapter = from_chapter
             else:
                 to_chapter = max([c.rank for c in dest_book.chapters])
 
-    if from_book == to_book and to_chapter < from_chapter:
+    if f_book == t_book and to_chapter < from_chapter:
         raise HTTPException(
             status_code=400,
             detail="<to_chapter> param should be greater than <from_chapter>",
@@ -226,7 +223,7 @@ def search_verses(
 
         start_verse = qf.filter(
             and_(
-                Book.rank == from_book,
+                Book.rank == f_book,
                 Chapter.rank == from_chapter,
                 Verse.rank == from_verse,
             )
@@ -234,19 +231,19 @@ def search_verses(
         if to_verse is not None and to_verse > 0:
             end_verse = qf.filter(
                 and_(
-                    Book.rank == to_book,
+                    Book.rank == t_book,
                     Chapter.rank == to_chapter,
                     Verse.rank == to_verse,
                 )
             ).first()
         else:
-            qf = qf.filter(Book.rank == to_book)
+            qf = qf.filter(Book.rank == t_book)
             if to_chapter is not None and to_chapter > 0:
                 qf = qf.filter(Chapter.rank == to_chapter)
             end_verse = qf.order_by(Verse.rank_all.desc()).first()
 
         if start_verse and end_verse:
-            print(f"start_verse : {start_verse} , end_verse: {end_verse}")
+            logger.info("start_verse : %s , end_verse: %s", start_verse, end_verse)
             base_q = crud.verse.query_by_version(db, vers)
             q = base_q.filter(
                 Verse.rank_all >= start_verse.rank_all,
@@ -299,6 +296,71 @@ def search_verses(
         return TEMPLATES.TemplateResponse("verse.html", data)
     else:
         return data
+
+
+@router.get(
+    "/{version}/verses_ref",
+    status_code=200,
+    response_model=VerseReferences,
+)
+def search_references(
+    *,
+    version: str,
+    references: str,
+    # to_html: bool = False,
+    # request: Request,
+    db: Session = Depends(deps.get_db),
+) -> dict:
+    """Search one or multiple references using common format:<br/>
+    (Book identifier can be name or short_name or code)
+    <p>e.g :
+    <ul>
+    <li>Rev.5:1,4-5,17,21; Acts 5:15-20,25; John 3.16;Psa 23;1 John 3.16-19,22
+    <li>psa_ 24;apocalypse 5:10-12; 2 the 3:1,4,6-8<br/>
+    </ul>
+
+    """
+    refs = parse_bible_ref(references)
+    results = []
+    for ref in refs:
+        qf = crud.verse.query_by_version(db, version)
+        logger.info(ref)
+        book_name = ref["book"]
+        chapter_rank = ref["chapter"]
+        q = qf.filter(
+            or_(
+                Book.name.ilike(book_name),
+                Book.short_name.ilike(book_name),
+                Book.code.ilike(book_name),
+            )
+        ).filter(Chapter.rank == chapter_rank)
+
+        verse_range = ref["verses"]
+        if verse_range:
+            for verse in verse_range:
+                interval = verse.split("-")
+                if len(interval) == 1:
+                    qv = q.filter(Verse.rank == interval[0].strip())
+                else:
+                    qv = q.filter(
+                        Verse.rank >= interval[0].strip(),
+                        Verse.rank <= interval[1].strip(),
+                    )
+                results.append(
+                    {
+                        "reference": f"{book_name} {chapter_rank}:{verse}",
+                        "verses": qv.all(),
+                    }
+                )
+        else:
+            results.append(
+                {
+                    "reference": f"{book_name} {chapter_rank}",
+                    "verses": q.all(),
+                }
+            )
+
+    return {"results": results}
 
 
 @router.get(
@@ -387,58 +449,3 @@ def delete_bible_by_version(
             )
     else:
         raise HTTPException(status_code=403, detail="Bad key supplied")
-
-
-@router.get(
-    "/{version}/verses_ref",
-    status_code=200,
-    response_model=VerseReferences,
-)
-def search_references(
-    *,
-    version: str,
-    references: str,
-    # to_html: bool = False,
-    # request: Request,
-    db: Session = Depends(deps.get_db),
-) -> dict:
-    refs = parse_bible_ref(references)
-    results = []
-    for ref in refs:
-        qf = crud.verse.query_by_version(db, version)
-        book_name = ref["book"]
-        chapter_rank = ref["chapter"]
-        q = qf.filter(
-            or_(
-                Book.name.ilike(book_name),
-                Book.short_name.ilike(book_name),
-                Book.code.ilike(book_name),
-            )
-        ).filter(Chapter.rank == chapter_rank)
-
-        verse_range = ref["verses"]
-        if verse_range:
-            for verse in verse_range:
-                interval = verse.split("-")
-                if len(interval) == 1:
-                    qv = q.filter(Verse.rank == interval[0].strip())
-                else:
-                    qv = q.filter(
-                        Verse.rank >= interval[0].strip(),
-                        Verse.rank <= interval[1].strip(),
-                    )
-                results.append(
-                    {
-                        "reference": f"{book_name} {chapter_rank}:{verse}",
-                        "verses": qv.all(),
-                    }
-                )
-        else:
-            results.append(
-                {
-                    "reference": f"{book_name} {chapter_rank}",
-                    "verses": q.all(),
-                }
-            )
-
-    return {"results": results}
