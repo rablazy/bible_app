@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Font Awesome Icons</title>
+    <title>Bible references</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
     />
     <style type="text/css">
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+      }
+
       .container {
-        display: flex;
+        width: 100%;
       }
 
       .scripture {
-        flex: 1;
-        padding-left: 1.5%;
-        padding-right: 1.5%;
-        vertical-align: middle;
       }
 
       .verse-info {
@@ -29,7 +32,6 @@
       }
 
       .verse-text {
-        padding-bottom: 0.1em;
       }
 
       .subtitle {
@@ -55,16 +57,60 @@
       .notfound {
         color: red;
       }
+
+      table.verses {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+
+      .verses th {
+        font-size: 3vmin;
+        font-weight: 300;
+        background-image: linear-gradient(to left, #553c9a, #b393d3);
+        color: transparent;
+        background-clip: text;
+        -webkit-background-clip: text;
+        padding: 8px;
+        vertical-align: top;
+        text-transform: uppercase;
+      }
+
+      .verses td {
+        text-align: left;
+        padding: 1%;
+        vertical-align: top;
+      }
+
     </style>
   </head>
   <body>
     <div class="container">
-      {% include 'reference_version.html' %}
-      {% for tr in trans %}
-      {% with results=tr.references %}
-        {% include 'reference_version.html' %}
-      {% endwith
-      %} {% endfor%}
+      <table class="verses">
+        <thead>
+          <tr>
+            {% for vers in versions %}
+            <th>{{vers}}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in results %}
+          <tr>
+            <td>
+              {% with reference=item.reference, verses=item.verses %}
+              {% include "reference_version.html" %} {% endwith %}
+            </td>
+            {% for tr in item.trans %}
+            <td>
+              {% with reference=tr.reference, verses=tr.verses %}
+              {% include "reference_version.html" %} {% endwith %}
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
   </body>
 </html>

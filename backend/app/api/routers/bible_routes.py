@@ -243,7 +243,7 @@ def search_verses(
             end_verse = qf.order_by(Verse.rank_all.desc()).first()
 
         if start_verse and end_verse:
-            logger.info("start_verse : %s , end_verse: %s", start_verse, end_verse)
+            logger.info("start_verse : %s - end_verse: %s", start_verse, end_verse)
             base_q = crud.verse.query_by_version(db, vers)
             q = base_q.filter(
                 Verse.rank_all >= start_verse.rank_all,
@@ -331,14 +331,11 @@ def search_references(
         pass
     translate_versions.insert(0, version)
 
-    results = []
-    trans = []
+    results = dict()
     for vers in translate_versions:
-        verses = []
         book_q = crud.book.query_by_version(db, vers)
         for ref in refs:
             q = crud.verse.query_by_version(db, vers)
-            print(ref)
             book_name = ref["book"]
             chapter_rank = ref["chapter"]
             if vers == version:
@@ -355,7 +352,9 @@ def search_references(
 
             q = q.filter(Chapter.rank == chapter_rank, Chapter.book == book)
 
-            verse_range = ref["verses"]
+            verse_range = (
+                ref["verses"] if ref["verses"] else ["1-300"]
+            )  # hack for all verses in a chapter
             if verse_range:
                 for verse in verse_range:
                     interval = verse.split("-")
@@ -366,31 +365,39 @@ def search_references(
                             Verse.rank >= interval[0].strip(),
                             Verse.rank <= interval[1].strip(),
                         )
-                    item = {
-                        "reference": f"{book.short_name if book else book_name} {chapter_rank}:{verse}",
-                        "verses": qv.all(),
-                    }
-                    if vers == version:  # mix_trans or
-                        results.append(item)
+                    if verse == "1-300":
+                        reference = f"{book.name if book else book_name} {chapter_rank}"
+                        key = f"{book.code if book else book_name} {chapter_rank}"
+                        verses = q.all()
                     else:
-                        verses.append(item)
-            else:
-                item = {
-                    "reference": f"{book.short_name if book else book_name} {chapter_rank}",
-                    "verses": q.all(),
-                }
-                if vers == version:  # mix_trans or
-                    results.append(item)
-                else:
-                    verses.append(item)
+                        reference = (
+                            f"{book.name if book else book_name} {chapter_rank}:{verse}"
+                        )
+                        key = (
+                            f"{book.code if book else book_name} {chapter_rank}:{verse}"
+                        )
+                        verses = qv.all()
 
-        if vers != version:
-            trans.append({"version": vers, "references": verses})
+                    item = {
+                        "version": vers,
+                        "reference": reference,
+                        "verses": verses,
+                    }
 
-    data = {"results": results, "trans": trans}
+                    if vers == version:
+                        item.update({"trans": []})
+                        results[key] = item
+                    else:
+                        results[key]["trans"].append(item)
 
+    data = {"results": results.values()}
     if to_html:
-        data.update({"request": request})
+        data.update(
+            {
+                "request": request,
+                "versions": translate_versions,
+            }
+        )
         return TEMPLATES.TemplateResponse("references.html", data)
     else:
         return data

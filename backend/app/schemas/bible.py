@@ -114,22 +114,18 @@ class VerseTransItems(BaseModel):
     """Verse list with translations"""
 
     version: str
+    reference: Optional[str] = None
     verses: Optional[List[VerseItem]] = []
 
 
 class VerseReference(BaseModel):
     reference: str
     verses: List[VerseItem]
-
-
-class VerseReferenceTransItems(BaseModel):
-    version: str
-    verses: Optional[List[VerseReference]] = []
+    trans: Optional[List[VerseTransItems]] = []
 
 
 class VerseReferences(BaseModel):
     results: List[VerseReference]
-    trans: Optional[List[VerseReferenceTransItems]] = []
 
 
 BibleItem.model_rebuild()

@@ -245,16 +245,24 @@ def test_get_verse_references(client):
     )
     assert len(data.results) == 2
     assert len(data.results[0].verses) == 6
-    assert data.results[0].reference == "Sal 23"
+    assert data.results[0].reference == "Salamo 23"
     assert len(data.results[1].verses) == 10
 
     refs = "Apo.5:1,4-5; act_ 5:15-20,25; 10:12;Jaona 3:16;Sal 23;1 Jaona 3:16-19,22;3jao 1.2"
     data = get_url(
-        client, f"{MG_VERSION}/verses_ref?references={urllib.parse.quote_plus(refs)}"
+        client,
+        f"{MG_VERSION}/verses_ref?references={urllib.parse.quote_plus(refs)}&translate_versions=kjv",
     )
     assert len(data.results) == 10
     for res in data.results:
         assert len(res.verses) > 0
+        for tr in res.trans:
+            assert len(tr.verses) > 0
+
+    refs = "Salamo 23;Sal 24"
+    data = get_url(
+        client, f"{MG_VERSION}/verses_ref?references={urllib.parse.quote_plus(refs)}"
+    )
 
 
 def test_search_text(client):
