@@ -56,7 +56,7 @@ def test_search_books_old_testament(client):
         f"{MG_VERSION}/books?offset=10&max_results=20&book_type={BookTypeEnum.OLD.value}",
     )
     assert len(data.results) == 20
-    assert data.results[0].short_name.upper() == "1MPA"
+    assert data.results[0].short_name.upper() == "1 MPA"
     assert data.results[-1].short_name.upper() == "AMO"
 
 
@@ -248,7 +248,7 @@ def test_get_verse_references(client):
     assert data.results[0].reference == "Salamo 23"
     assert len(data.results[1].verses) == 10
 
-    refs = "Apo.5:1,4-5; act_ 5:15-20,25; 10:12;Jaona 3:16;Sal 23;1 Jaona 3:16-19,22;3jao 1.2"
+    refs = "Apo.5:1,4-5; act_ 5:15-20,25; 10:12;Jaona 3:16;Sal 23;1 Jaona 3:16-19,22;3 jao 1.2"
     data = get_url(
         client,
         f"{MG_VERSION}/verses_ref?references={urllib.parse.quote_plus(refs)}&translate_versions=kjv",
