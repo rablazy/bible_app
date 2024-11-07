@@ -141,3 +141,15 @@ class Book(Base):
 
     def __str__(self):
         return self.name
+
+
+class Theme(Base):
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    parent_id = Column(Integer, ForeignKey("theme.id", ondelete="cascade"))
+    parent = relationship("Theme", remote_side=[id])
+    references = Column(Text)
+
+    @property
+    def parent_name(self):
+        return self.parent.name if self.parent else None

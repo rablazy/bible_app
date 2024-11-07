@@ -2,6 +2,7 @@ import http
 import logging
 import os
 import pathlib
+import urllib.parse
 from typing import Annotated, List, Optional, Union
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
@@ -10,18 +11,20 @@ from fastapi.security import APIKeyHeader
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import and_, or_
+from starlette.responses import RedirectResponse
 
 from app import crud
 from app.api import deps
 from app.api.routers.utils import parse_bible_ref, set_query_parameter
 from app.core.config import settings
-from app.models.bible import Bible, Book, BookTypeEnum, Chapter, Verse
+from app.models.bible import Bible, Book, BookTypeEnum, Chapter, Theme, Verse
 from app.schemas.bible import (
     BibleItem,
     BookItemShort,
     ChapterItem,
     ChapterItemNoVerses,
     ListItems,
+    ThemeItem,
     VerseItem,
     VerseItems,
     VerseReferences,
@@ -321,6 +324,7 @@ def search_references(
     </ul>
 
     """
+    print(request.scope["route"].name)
     refs = parse_bible_ref(references)
 
     if not translate_versions:
@@ -390,14 +394,9 @@ def search_references(
                     else:
                         results[key]["trans"].append(item)
 
-    data = {"results": results.values()}
+    data = {"results": results.values(), "versions": translate_versions}
     if to_html:
-        data.update(
-            {
-                "request": request,
-                "versions": translate_versions,
-            }
-        )
+        data.update({"request": request})
         return TEMPLATES.TemplateResponse("references.html", data)
     else:
         return data
@@ -489,3 +488,72 @@ def delete_bible_by_version(
             )
     else:
         raise HTTPException(status_code=403, detail="Bad key supplied")
+
+
+@router.get(
+    "/themes/list",
+    status_code=200,
+    response_model=ListItems[ThemeItem],
+)
+def list_themes(db: Session = Depends(deps.get_db)):  # add lang param
+    themes = db.query(Theme).order_by(Theme.id, Theme.parent_id).all()
+    return {"results": list(themes), "count": len(themes), "total": len(themes)}
+
+
+@router.get(
+    "/themes/{theme_id}/{bible_version}/verses_ref",
+    responses={
+        200: {"description": "Success"},
+        404: {"description": "Theme not found"},
+    },
+    status_code=200,
+    response_model=VerseReferences,
+)
+def get_theme_verses(
+    *,
+    theme_id: int,
+    bible_version: str,
+    translate_versions: List[str] = Query(None),
+    to_html: bool = False,
+    request: Request,
+    db: Session = Depends(deps.get_db),
+):
+    theme = db.query(Theme).get(theme_id)
+    if theme:
+        # url = request.url_for(  # request.url_for or router.url_path_for
+        #     "search_references",  # bible:search_references
+        #     version=bible_version,
+        #     references=urllib.parse.quote_plus(theme.references),
+        #     to_html=True,
+        # )
+        # response = RedirectResponse(url=url)
+        # return response
+        sub_themes = db.query(Theme).filter(Theme.parent_id == theme.id).all()
+        if theme.references:
+            data = search_references(
+                version=bible_version,
+                references=theme.references,
+                translate_versions=translate_versions,
+                request=request,
+                db=db,
+            )
+        else:
+            data = {}
+        if to_html:
+            versions = data["versions"] if data else translate_versions
+            data.update(
+                {
+                    "request": request,
+                    "version": bible_version,
+                    "versions" : versions,
+                    "translate_versions": "&".join(
+                        ["translate_versions=" + vers for vers in versions]
+                    ),
+                    "thema": theme,
+                    "sub_themas": sub_themes,
+                }
+            )
+            return TEMPLATES.TemplateResponse("references.html", data)
+        return data
+    else:
+        raise HTTPException(status_code=404, detail=f"Theme {theme_id} not found")

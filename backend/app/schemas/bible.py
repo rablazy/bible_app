@@ -128,6 +128,17 @@ class VerseReferences(BaseModel):
     results: List[VerseReference]
 
 
+class ThemeItem(BaseModel):
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+    id: int
+    name: str
+    parent_id: Optional[int] = None
+    parent_name: Optional[str] = None
+    references: Optional[str] = None
+
+
 BibleItem.model_rebuild()
 ChapterItem.model_rebuild()
 VerseItem.model_rebuild()

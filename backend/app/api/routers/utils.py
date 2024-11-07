@@ -27,7 +27,7 @@ def set_query_parameter(url, new_param_values: dict):
 def parse_bible_ref(references: str):
     pattern = r"(?P<book>\d{0,1}\s?\w+)(\s|.)?((?P<chapter>\d+((–|-)\d+)?)((:|.)(?P<verse>(,?\d+((–|-)\d+)?)+))?)?"
     res = []
-    parts = references.split(";")
+    parts = references.split(";") if references else []
 
     last_book = None
     for part in parts:
