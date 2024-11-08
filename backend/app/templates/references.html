@@ -225,7 +225,11 @@
           {{ thema.name }}
           {% if thema.parent_name %}
           <span>
-            <a href={{url_for('get_theme_verses', theme_id=thema.parent_id, bible_version=version) ~ '?to_html=True&' ~ translate_versions }}>
+            {% set url = url_for('get_theme_verses', theme_id=thema.parent_id, version=main_version) ~ '?to_html=True' %}
+            {% if versions %}
+            {% set url = url ~ '&translate_versions=' ~ versions|join(',') %}
+            {% endif %}
+            <a href={{ url }}>
             {{thema.parent_name}}</a>
           </span>
           {% endif %}
@@ -242,7 +246,11 @@
             <div class="items-body">
               {% for cth in sub_themas %}
               <div class="items-body-content" >
-                <a href={{url_for('get_theme_verses', theme_id=cth.id, bible_version=version) ~ '?to_html=True&' ~ translate_versions }}>
+                {% set url = url_for('get_theme_verses', theme_id=cth.id, version=main_version) ~ '?to_html=True' %}
+                {% if versions %}
+                {% set url = url ~ '&translate_versions=' ~ versions|join(',') %}
+                {% endif %}
+                <a href={{url}}>
                   <span>
                     {{ cth.name }}
                   </span>

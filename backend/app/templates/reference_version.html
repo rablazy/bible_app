@@ -1,7 +1,8 @@
 <div class="scripture">
   <span class="verse-info"><i class="fa fa-book" style="font-size: 24px"></i>&nbsp;<b>{{reference}}</b></span>
   <div class="verse-text" id="verse-text">
-    {% if verses %} {% for verse in verses %}
+    {% if verses %}
+    {% for verse in verses %}
     <div>
       {% if verse.subtitle %}
       <p class="subtitle">{{verse.subtitle}}</p>
@@ -11,7 +12,8 @@
         <span class="verse">{{verse.content}}</span>
       </p>
     </div>
-    {% endfor %} {% else %}
+    {% endfor %}
+    {% else %}
     <p class="notfound"><i class="fa fa-times" style="font-size: 24px"></i></p>
     {% endif %}
   </div>

@@ -126,6 +126,7 @@ class VerseReference(BaseModel):
 
 class VerseReferences(BaseModel):
     results: List[VerseReference]
+    versions: Optional[List[str]] = []
 
 
 class ThemeItem(BaseModel):
