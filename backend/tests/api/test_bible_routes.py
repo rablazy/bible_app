@@ -106,7 +106,7 @@ def test_get_verse_translate(client):
     )
     assert len(data.results) == 3
     assert len(data.trans) == 1
-    assert data.trans[0].version == "kjv"
+    assert data.trans[0].version == "KJV"
     assert len(data.trans[0].verses) == 3
     assert data.trans[0].verses[0].code == "mat_.05.01"
 
@@ -274,7 +274,7 @@ def test_search_text(client):
 
 def test_search_text_in_book(client):
     data = get_url(
-        client, f"{MG_VERSION}/search?text=sambatra&book_code=mat_&book_chapter=5"
+        client, f"{MG_VERSION}/search?text=sambatra&book=mat_&book_chapter=5"
     )  # béatitudes
     assert data.total == 9
 
@@ -283,11 +283,11 @@ def test_search_text_translate(client):
     get_url(client, "search?version=kjv")
     data = get_url(
         client,
-        f"{MG_VERSION}/search?text=sambatra&book_code=mat_&book_chapter=5&translate_versions=kjv",
+        f"{MG_VERSION}/search?text=sambatra&book=Mat&book_chapter=5&translate_versions=kjv",
     )
     assert len(data.results) == 9
     assert len(data.trans) == 1
-    assert data.trans[0].version == "kjv"
+    assert data.trans[0].version == "KJV"
     assert len(data.trans[0].verses) == 9
     assert data.trans[0].verses[-1].code == "mat_.05.11"
 

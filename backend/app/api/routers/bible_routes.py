@@ -2,26 +2,30 @@ import http
 import logging
 import os
 import pathlib
+import urllib.parse
 from typing import Annotated, List, Optional, Union
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.security import APIKeyHeader
 from fastapi.templating import Jinja2Templates
+from ordered_set import OrderedSet
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import and_, or_
+from starlette.responses import RedirectResponse
 
 from app import crud
 from app.api import deps
 from app.api.routers.utils import parse_bible_ref, set_query_parameter
 from app.core.config import settings
-from app.models.bible import Bible, Book, BookTypeEnum, Chapter, Verse
+from app.models.bible import Bible, Book, BookTypeEnum, Chapter, Theme, Verse
 from app.schemas.bible import (
     BibleItem,
     BookItemShort,
     ChapterItem,
     ChapterItemNoVerses,
     ListItems,
+    ThemeItem,
     VerseItem,
     VerseItems,
     VerseReferences,
@@ -153,7 +157,7 @@ def get_chapter(
     status_code=200,
     response_model=VerseItems,
 )
-def search_verses(
+async def search_verses(
     *,
     version: str,
     from_book: str,
@@ -172,7 +176,13 @@ def search_verses(
 ) -> dict:
     """Load on verse or multiple verses across chapters"""
 
-    start_book = crud.book.query_by_name_or_code(db, from_book) if from_book else None
+    main_version, tv = _clean_versions(version, translate_versions, db)
+
+    start_book = (
+        crud.book.query_by_name_or_code(db, main_version, from_book).first()
+        if from_book
+        else None
+    )
     f_book = start_book.rank if start_book else -1
 
     t_book = -1
@@ -180,7 +190,7 @@ def search_verses(
         to_book = from_book
         t_book = f_book
 
-    dest_book = crud.book.query_by_name_or_code(db, to_book)
+    dest_book = crud.book.query_by_name_or_code(db, main_version, to_book).first()
 
     if not to_book == from_book:
         t_book = dest_book.rank if dest_book else -1
@@ -207,18 +217,10 @@ def search_verses(
             detail="<to_chapter> param should be greater than <from_chapter>",
         )
 
-    if not translate_versions:
-        translate_versions = []
-    try:
-        translate_versions.remove(version)
-    except (ValueError, AttributeError):
-        pass
-    translate_versions.insert(0, version)
-
     results = []
     trans = []
     total = 0
-    for vers in translate_versions:
+    for vers in tv:
         qf = crud.verse.query_by_version(db, vers)
 
         start_verse = qf.filter(
@@ -250,7 +252,7 @@ def search_verses(
                 Verse.rank_all <= end_verse.rank_all,
             )
             res = q.order_by(Verse.rank_all).offset(offset).limit(max_results).all()
-            if mix_trans or vers == version:
+            if mix_trans or vers == main_version:
                 results.extend(res)
                 total = max(
                     total, q.count()
@@ -303,11 +305,11 @@ def search_verses(
     status_code=200,
     response_model=VerseReferences,
 )
-def search_references(
+async def search_references(
     *,
     version: str,
     references: str,
-    translate_versions: List[str] = Query(None),
+    translate_versions: List[str] = Query([]),
     to_html: bool = False,
     request: Request,
     db: Session = Depends(deps.get_db),
@@ -322,23 +324,15 @@ def search_references(
 
     """
     refs = parse_bible_ref(references)
-
-    if not translate_versions:
-        translate_versions = []
-    try:
-        translate_versions.remove(version)
-    except (ValueError, AttributeError):
-        pass
-    translate_versions.insert(0, version)
-
+    main_version, tv = _clean_versions(version, translate_versions, db)
     results = dict()
-    for vers in translate_versions:
+    for vers in tv:
         book_q = crud.book.query_by_version(db, vers)
         for ref in refs:
             q = crud.verse.query_by_version(db, vers)
             book_name = ref["book"]
             chapter_rank = ref["chapter"]
-            if vers == version:
+            if vers == main_version:
                 book = book_q.filter(
                     or_(
                         Book.name.ilike(book_name),
@@ -354,7 +348,7 @@ def search_references(
 
             verse_range = (
                 ref["verses"] if ref["verses"] else ["1-300"]
-            )  # hack for all verses in a chapter
+            )  # hack for all verses in a chapter (e.g Mat 10;Pro 5)
             if verse_range:
                 for verse in verse_range:
                     interval = verse.split("-")
@@ -384,20 +378,16 @@ def search_references(
                         "verses": verses,
                     }
 
-                    if vers == version:
+                    if vers == main_version:
                         item.update({"trans": []})
                         results[key] = item
                     else:
-                        results[key]["trans"].append(item)
+                        if key in results:
+                            results[key]["trans"].append(item)
 
-    data = {"results": results.values()}
+    data = {"results": results.values(), "versions": tv}
     if to_html:
-        data.update(
-            {
-                "request": request,
-                "versions": translate_versions,
-            }
-        )
+        data.update({"request": request})
         return TEMPLATES.TemplateResponse("references.html", data)
     else:
         return data
@@ -408,11 +398,11 @@ def search_references(
     status_code=200,
     response_model=VerseItems,
 )
-def search_text(
+async def search_text(
     *,
     version: str,
     text: List[str] = Query(...),
-    book_code: Optional[str] = None,
+    book: Optional[str] = None,
     book_chapter: Optional[int] = None,
     translate_versions: List[str] = Query(None),
     offset: Annotated[int, Query(ge=0)] = 0,
@@ -420,34 +410,41 @@ def search_text(
     db: Session = Depends(deps.get_db),
 ):
     """Search for text in verses"""
-    base_q = crud.verse.query_by_version(db, version)
+
+    main_version, trv = _clean_versions(version, translate_versions, db)
+
+    q = crud.verse.query_by_version(db, main_version)
+
     filters = []
     for t in text:
         filters.append(or_(Verse.content.icontains(t), Verse.subtitle.icontains(t)))
-    q = base_q.filter(or_(*filters))
-    if book_code:
-        q = q.filter(Book.code == book_code)
-    if book_chapter:
-        q = q.filter(Chapter.rank == book_chapter)
+    q = q.filter(or_(*filters))
+
+    if book:
+        bk = crud.book.query_by_name_or_code(db, main_version, book).first()
+        if bk:
+            chapters = db.query(Chapter).filter(Chapter.book == bk).all()
+            if book_chapter:
+                q = q.filter(Chapter.rank == book_chapter)
+
+            # this has far better perf then joining with filtering Book directly in main query
+            q = q.filter(Verse.chapter_id.in_([c.id for c in chapters]))
 
     results = list(q.order_by(Verse.rank_all).offset(offset).limit(max_results).all())
 
-    try:
-        translate_versions.remove(version)
-    except (ValueError, AttributeError):
-        pass
-
     trans = []
-    if results and translate_versions:
+    if results and trv:
         verse_codes = [verse.code for verse in results]
-        for tv in translate_versions:
-            qv = (
-                crud.verse.query_by_version(db, tv)
-                .filter(Verse.code.in_(verse_codes))
-                .order_by(Verse.rank_all)
-                .all()
-            )
-            trans.append({"version": tv, "verses": qv})
+        for tv in trv:
+            if tv != main_version:
+                verses = (
+                    crud.verse.query_by_version(db, tv)
+                    .filter(Verse.code.in_(verse_codes))
+                    .order_by(Verse.rank_all)
+                    .all()
+                )
+
+                trans.append({"version": tv, "verses": verses})
 
     return {
         "results": results,
@@ -459,7 +456,7 @@ def search_text(
 
 
 @router.delete("/delete/id/{bid}")
-def delete_bible_by_id(
+async def delete_bible_by_id(
     bid: int, db: Session = Depends(deps.get_db), key: str = Depends(header_scheme)
 ):
     """Delete bible by id"""
@@ -474,7 +471,7 @@ def delete_bible_by_id(
 
 
 @router.delete("/delete/version/{version}")
-def delete_bible_by_version(
+async def delete_bible_by_version(
     version: str, db: Session = Depends(deps.get_db), key: str = Depends(header_scheme)
 ):
     """Delete bible by version name"""
@@ -489,3 +486,84 @@ def delete_bible_by_version(
             )
     else:
         raise HTTPException(status_code=403, detail="Bad key supplied")
+
+
+@router.get(
+    "/themes/list",
+    status_code=200,
+    response_model=ListItems[ThemeItem],
+)
+def list_themes(db: Session = Depends(deps.get_db)):  # add lang param
+    themes = db.query(Theme).order_by(Theme.id, Theme.parent_id).all()
+    return {"results": list(themes), "count": len(themes), "total": len(themes)}
+
+
+@router.get(
+    "/themes/{theme_id}/{version}/verses_ref",
+    responses={
+        200: {"description": "Success"},
+        404: {"description": "Theme not found"},
+    },
+    status_code=200,
+    response_model=VerseReferences,
+)
+async def get_theme_verses(
+    *,
+    theme_id: int,
+    version: str,
+    translate_versions: List[str] = Query([]),
+    to_html: bool = False,
+    request: Request,
+    db: Session = Depends(deps.get_db),
+):
+    """Get all verses related to a defined theme"""
+    theme = db.query(Theme).get(theme_id)
+    if theme:
+        sub_themes = db.query(Theme).filter(Theme.parent_id == theme.id).all()
+        if theme.references:
+            data = await search_references(
+                version=version,
+                references=theme.references,
+                translate_versions=translate_versions,
+                request=request,
+                db=db,
+            )
+        else:
+            data = {}
+        if to_html:
+            data.update(
+                {
+                    "request": request,
+                    "main_version": version,
+                    "versions": data.get("versions", translate_versions),
+                    "thema": theme,
+                    "sub_themas": sub_themes,
+                }
+            )
+            return TEMPLATES.TemplateResponse("references.html", data)
+        return data
+    else:
+        raise HTTPException(status_code=404, detail=f"Theme {theme_id} not found")
+
+
+def _clean_versions(version: str, translate_versions: list[str], db: Session):
+
+    vup = version.upper()
+
+    if not translate_versions:
+        translate_versions = []
+
+    tv = [v.upper() for v in translate_versions]
+
+    if len(tv) == 1 and "," in tv[0]:
+        tv = tv[0].split(",")
+    for v in [vup, ""]:
+        if v in tv:
+            tv.remove(v)  # remove dup
+
+    tv.insert(0, vup)
+
+    versions_in_db = [b.version.upper() for b in db.query(Bible).all()]
+    tv = list(OrderedSet([v for v in tv if v in versions_in_db]))
+
+    return vup, tv
